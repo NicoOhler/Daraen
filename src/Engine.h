@@ -2,6 +2,7 @@
 #include "MoveGenerator.h"
 #include "ZobristHash.h"
 #include "TranspositionTable.h"
+#include "History.h"
 #include "Evaluation.h"
 #include "TimeManagement.h"
 #include "definitions.h"
@@ -34,12 +35,11 @@ public:
 private:
     Board board = Board::generateBoardFromFEN(START_FEN);
     MoveGenerator move_generator = MoveGenerator::getInstance();
-    Move killer_moves[MAX_PV_SEARCH_DEPTH][NUM_KILLER_MOVES];
     TranspositionTable transposition_table;
     ZobristHash zobrist;
     Evaluation eval;
     TimeManagement time_management;
-    UndoHistory undo_history;
+    History history;
     uint64 evaluated_nodes;
     int search_depth;
     bool search_stopped;
@@ -49,6 +49,5 @@ private:
     Score pv_search(int depth, int remaining_depth, Score alpha, Score beta);
     Score quiescence(Score alpha, Score beta, int max_depth = MAX_QUIESCENCE_DEPTH);
     void calculateMoveScores(MoveList &moves, Move move, int ply = -1);
-    void storeKillerMove(Move move, int ply);
     void printSearchInfo(int depth, Score score, Move pv_move, Milliseconds &iteration_time);
 };

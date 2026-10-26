@@ -3,23 +3,20 @@
 #include "Logger.h"
 #include "MoveGenerator.h"
 
+// material values
 const Score PAWN_VALUE = 100;
 const Score KNIGHT_VALUE = 300;
 const Score BISHOP_VALUE = 330;
 const Score ROOK_VALUE = 500;
 const Score QUEEN_VALUE = 900;
-const Score KING_VALUE = 200000;
+const Score KING_VALUE = 500000;
 const Score DELTA_VALUE = 800;
-const Score MATE_VALUE = 6000000;
-const Score MIN_MATE_VALUE = MATE_VALUE - MAX_SEARCH_DEPTH;
-const Score DRAW_VALUE = -200;
 const Score ISOLATED_PAWN_VALUE = -50;
 const Score DOUBLED_PAWN_VALUE = -50;
 const Score BLOCKED_PAWN_VALUE = -50;
-const Score PROMOTION_VALUE = 20000;
-const Score CAPTURE_VALUE = 2000;
-const Score PRIMARY_KILLER_VALUE = CAPTURE_VALUE;
-const Score SECONDARY_KILLER_VALUE = CAPTURE_VALUE - 10;
+const Score DRAW_VALUE = -200;
+const Score MATE_VALUE = 6000000;
+const Score MIN_MATE_VALUE = MATE_VALUE - MAX_SEARCH_DEPTH;
 
 const Score PIECE_VALUES[NUM_PIECES] = {
     PAWN_VALUE,

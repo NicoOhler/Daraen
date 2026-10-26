@@ -19,10 +19,6 @@
 + maybe improve move ordering via
     + Static Exchange Evaluation (SEE)
         + read wiki
-    + history heuristic
-        + track how often quiet moves cause cutoffs
-        + prioritize those
-        + requires decay mechanism
 + setup Sequential Probability Ratio Test
     + evaluates whether a patch makes the engine stronger compared to live version
     + e.g. using fast-chess

@@ -28,7 +28,7 @@ void Engine::reset()
     search_depth = DEFAULT_SEARCH_DEPTH;
     stopSearch();
     time_management.reset();
-    undo_history.clear();
+    history.clear();
     transposition_table.clear();
 }
 
@@ -60,8 +60,8 @@ Move Engine::search()
         best_move = transposition_table.probe(board.hash)->best_move;
         printSearchInfo(depth, score, best_move, iteration_time);
 
-        // if (!time_management.sufficientTimeForNextIterationLeft())
-        //     stopSearch("Insufficient time for next iteration after " + convertMillisecondsToTimeString(time_management.getElapsedTime()));
+        if (!time_management.sufficientTimeForNextIterationLeft())
+            stopSearch("Insufficient time for next iteration after " + convertMillisecondsToTimeString(time_management.getElapsedTime()));
     }
     // transposition_table.printHitRate();
     return best_move;
@@ -92,6 +92,7 @@ Score Engine::pv_search(int ply, int remaining_depth, Score lower_bound, Score u
             if (entry->type == UPPER_BOUND && retrieved_score < upper_bound)
                 upper_bound = retrieved_score;
             if (lower_bound >= upper_bound)
+                // ? update history?
                 return retrieved_score;
         }
     }
@@ -139,7 +140,7 @@ Score Engine::pv_search(int ply, int remaining_depth, Score lower_bound, Score u
         // i.e., opponent will pick another move that is better
         if (score >= upper_bound)
         {
-            storeKillerMove(move, ply);
+            history.update(board, move, ply);
             break;
         }
 
@@ -220,9 +221,12 @@ void Engine::calculateMoveScores(MoveList &moves, Move best_move, int ply)
 {
     bool best_move_provided = best_move != NULL_MOVE;
     bool en_passant_possible = board.en_passant != NO_EN_PASSANT;
-    bool skip_killer_moves = ply < 0 || ply >= MAX_PV_SEARCH_DEPTH;
     Piece own_pawn = board.white_to_move ? WHITE_PAWN : BLACK_PAWN;
     Piece enemy_pawn = board.white_to_move ? BLACK_PAWN : WHITE_PAWN;
+
+    bool skip_quiet_moves = ply < 0;
+    Move primary_killer_move = skip_quiet_moves ? NULL_MOVE : history.killer_moves[ply][0];
+    Move secondary_killer_move = skip_quiet_moves ? NULL_MOVE : history.killer_moves[ply][1];
 
     for (int i = 0; i < moves.size; i++)
     {
@@ -252,28 +256,8 @@ void Engine::calculateMoveScores(MoveList &moves, Move best_move, int ply)
             moves.scores[i] = PIECE_VALUES[captured_piece] - PIECE_VALUES[moving_piece] + CAPTURE_VALUE;
         // then quiet non-capture moves
         else
-            moves.scores[i] = 0;
-        if (skip_killer_moves)
-            continue;
-        if (killer_moves[ply][0] == move)
-            moves.scores[i] = PRIMARY_KILLER_VALUE;
-        else if (killer_moves[ply][1] == move)
-            moves.scores[i] = SECONDARY_KILLER_VALUE;
+            moves.scores[i] = skip_quiet_moves ? 0 : history.getMoveScore(board, move, ply);
     }
-}
-
-void Engine::storeKillerMove(Move move, int ply)
-{
-    // only store quiet moves
-    // others are already prioritized in move ordering
-    if (!move.isQuiet(board))
-        return;
-
-    // least recently used replacement strategy
-    if (move == killer_moves[ply][0])
-        return;
-    killer_moves[ply][1] = killer_moves[ply][0];
-    killer_moves[ply][0] = move;
 }
 
 void Engine::printSearchInfo(int depth, Score score, Move pv_move, Milliseconds &iteration_time)
@@ -330,7 +314,7 @@ bool Engine::makeMoveIfLegal(Move move)
     UndoInfo undo = move_generator.makeMove(board, move);
     if (move_generator.isKingSafe(board, king_color_before_move))
     {
-        undo_history.push(undo);
+        history.pushUndo(undo);
         zobrist.updateHash(board, move, undo);
         return true;
     }
@@ -342,13 +326,13 @@ void Engine::makeMove(Move move, bool store_in_history)
 {
     UndoInfo undo = move_generator.makeMove(board, move);
     if (store_in_history)
-        undo_history.push(undo);
+        history.pushUndo(undo);
     zobrist.updateHash(board, move, undo);
 }
 
 void Engine::unmakeMove(Move move)
 {
-    UndoInfo undo = undo_history.pop();
+    UndoInfo undo = history.popUndo();
     zobrist.updateHash(board, move, undo);
     move_generator.unmakeMove(board, move, undo);
 }

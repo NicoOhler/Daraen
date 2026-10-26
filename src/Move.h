@@ -46,13 +46,3 @@ struct UndoInfo
     CastlingRights castling_rights;
     HalfMoveClock half_move_clock;
 };
-
-struct UndoHistory
-{
-    UndoInfo undo_infos[MAX_SEARCH_DEPTH];
-    int size = 0;
-
-    void push(UndoInfo undo);
-    UndoInfo pop();
-    void clear();
-};
