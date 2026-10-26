@@ -55,14 +55,16 @@ const Position DOWN_RIGHT = -7;
 // engine
 const int DEFAULT_PERFT_DEPTH = 10;
 const int DEFAULT_SEARCH_DEPTH = 25;
-const int MAX_SEARCH_DEPTH = 40;
+const int MAX_PV_SEARCH_DEPTH = 40;
 const int MAX_QUIESCENCE_DEPTH = 30;
+const int MAX_SEARCH_DEPTH = MAX_PV_SEARCH_DEPTH + MAX_QUIESCENCE_DEPTH;
+const int NUM_KILLER_MOVES = 2;
 const int TRANSPOSITION_TABLE_SIZE_MB = 256;
 
 // time management
 const int CLOCK_UPDATE_INTERVAL_NODES = 10000;
 const Milliseconds DEFAULT_SEARCH_TIME = 5000;
-const Milliseconds FRACTION_OF_TIME_TO_ALLOCATE = 20;
+const Milliseconds FRACTION_OF_TIME_TO_ALLOCATE = 10;
 const Milliseconds SUFFICIENT_TIME_FOR_NEXT_ITERATION_FACTOR = 2; // 15;
 
 // benchmark

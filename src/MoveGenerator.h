@@ -21,12 +21,12 @@ private:
     // move generation
     void addPawnMoveWithPossiblePromotion(MoveList &moves, Move move);
     void addCastlingMoves(const Board &board, MoveList &moves);
-    void generateKingMoves(const Board &board, MoveList &moves, bool interesting_only = false);
-    void generatePawnMoves(const Board &board, MoveList &moves, bool interesting_only = false);
-    void generateKnightMoves(const Board &board, MoveList &moves, bool interesting_only = false);
-    void generateBishopMoves(const Board &board, MoveList &moves, bool interesting_only = false);
-    void generateRookMoves(const Board &board, MoveList &moves, bool interesting_only = false);
-    void generateQueenMoves(const Board &board, MoveList &moves, bool interesting_only = false);
+    void generateKingMoves(const Board &board, MoveList &moves, bool only_non_quiet_moves = false);
+    void generatePawnMoves(const Board &board, MoveList &moves, bool only_non_quiet_moves = false);
+    void generateKnightMoves(const Board &board, MoveList &moves, bool only_non_quiet_moves = false);
+    void generateBishopMoves(const Board &board, MoveList &moves, bool only_non_quiet_moves = false);
+    void generateRookMoves(const Board &board, MoveList &moves, bool only_non_quiet_moves = false);
+    void generateQueenMoves(const Board &board, MoveList &moves, bool only_non_quiet_moves = false);
 
     // precomputed attacks for sliding pieces (bishop and rook) using magic bitboards
     void initializeCastlingRightsUpdate();
@@ -59,8 +59,8 @@ public:
     static MoveGenerator &getInstance();
     UndoInfo makeMove(Board &board, Move move);
     void unmakeMove(Board &board, Move move, UndoInfo undo);
-    MoveList generateLegalMoves(Board &board, bool interesting_only = false);
-    MoveList generatePseudoLegalMoves(Board &board, bool interesting_only = false);
+    MoveList generateLegalMoves(Board &board);
+    MoveList generatePseudoLegalMoves(Board &board, bool only_non_quiet_moves = false);
     bool isKingSafe(const Board &board, bool king_is_white);
     bool isSquareUnderAttack(const Board &board, Position square, bool white_is_attacker);
     bool areSquaresUnderAttack(const Board &board, Bitboard squares, bool white_is_attacker);

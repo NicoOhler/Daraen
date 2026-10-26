@@ -19,10 +19,6 @@
 + maybe improve move ordering via
     + Static Exchange Evaluation (SEE)
         + read wiki
-    + killer heuristic
-        + orders quiet (non-capture) moves that cause beta cutoffs
-        + reuse information from neighbor branches
-        + read wiki
     + history heuristic
         + track how often quiet moves cause cutoffs
         + prioritize those

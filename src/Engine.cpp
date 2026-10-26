@@ -67,31 +67,6 @@ Move Engine::search()
     return best_move;
 }
 
-void Engine::calculateMoveScores(MoveList &moves, TranspositionEntry *entry)
-{
-    // retrieve best move from transposition table if available
-    Move best_move = entry != nullptr ? entry->best_move : NULL_MOVE;
-    for (int i = 0; i < moves.size; i++)
-    {
-        Move move = moves.moves[i];
-        Piece moving_piece = board.pieces[move.from];
-        Piece captured_piece = board.pieces[move.to];
-        // search previously best move first, which will likely cause a beta cutoff
-        if (move == best_move)
-            moves.scores[i] = POS_INFINITY;
-        // then promotions
-        else if (move.isPromotion())
-            moves.scores[i] = PIECE_VALUES[move.getPromotionPiece(board.white_to_move)] + PROMOTION_VALUE;
-        // then captures according to Most Valuable Victim – Least Valuable Attacker
-        // i.e., prioritize captures of high value with low value pieces
-        else if (captured_piece != EMPTY)
-            moves.scores[i] = PIECE_VALUES[captured_piece] - PIECE_VALUES[moving_piece] + CAPTURE_VALUE;
-        // then quiet non-capture moves
-        else
-            moves.scores[i] = 0;
-    }
-}
-
 // Principal Variation Search (PVS)
 Score Engine::pv_search(int ply, int remaining_depth, Score lower_bound, Score upper_bound)
 {
@@ -127,10 +102,12 @@ Score Engine::pv_search(int ply, int remaining_depth, Score lower_bound, Score u
 
     // generate and evaluate moves until pruning possible
     MoveList pseudo_legal_moves = move_generator.generatePseudoLegalMoves(board);
-    calculateMoveScores(pseudo_legal_moves, entry);
-
-    Move move, best_move = NULL_MOVE;
     Score score, best_score = NEG_INFINITY;
+    Move move, best_move = NULL_MOVE;
+    if (entry != nullptr)
+        best_move = entry->best_move;
+    calculateMoveScores(pseudo_legal_moves, best_move, ply);
+
     bool null_window = false;
     for (int i = 0; i < pseudo_legal_moves.size && !search_stopped; i++)
     {
@@ -144,7 +121,7 @@ Score Engine::pv_search(int ply, int remaining_depth, Score lower_bound, Score u
             score = -pv_search(ply + 1, remaining_depth - 1, -lower_bound - 1, -lower_bound);
             // research with full window (alpha, beta) if no beta cutoff occurred
             if (score > lower_bound && score < upper_bound)
-                score = -pv_search(ply + 1, remaining_depth - 1, -upper_bound, -score);
+                score = -pv_search(ply + 1, remaining_depth - 1, -upper_bound, -lower_bound);
         }
         else // search with full window precision (i.e., regular negamax search)
             score = -pv_search(ply + 1, remaining_depth - 1, -upper_bound, -lower_bound);
@@ -158,21 +135,31 @@ Score Engine::pv_search(int ply, int remaining_depth, Score lower_bound, Score u
             best_move = move;
         }
 
+        // prune if upper bound exceeded
+        // i.e., opponent will pick another move that is better
+        if (score >= upper_bound)
+        {
+            storeKillerMove(move, ply);
+            break;
+        }
+
         // update lower bound if exceeded
         if (score > lower_bound)
             lower_bound = score;
-
-        // prune if upper bound exceeded
-        // i.e., opponent will pick another move that is better
-        if (upper_bound <= lower_bound)
-            break;
     }
 
-    if (!null_window) // no legal moves found
+    // do not store results if search was stopped
+    if (search_stopped)
+        return best_score;
+
+    // no legal moves found
+    if (!null_window)
         if (move_generator.isKingSafe(board, board.white_to_move))
-            return DRAW_VALUE; // do not add ply to avoid drawn out draws
+            // do not add ply to avoid drawn out draws
+            return DRAW_VALUE;
         else
-            return -MATE_VALUE + ply; // add ply to prefer fast games
+            // add ply to prefer fast games
+            return -MATE_VALUE + ply;
 
     // store best move in transposition table
     BoundType type = transposition_table.getBoundType(best_score, original_lower_bound, original_upper_bound);
@@ -198,7 +185,8 @@ Score Engine::quiescence(Score lower_bound, Score upper_bound, int ply)
     // further examine interesting moves (captures, promotions, checks, en passant)
     MoveList pseudo_legal_moves = move_generator.generatePseudoLegalMoves(board, true);
     TranspositionEntry *entry = transposition_table.probe(board.hash);
-    calculateMoveScores(pseudo_legal_moves, entry);
+    Move best_move = entry != nullptr ? entry->best_move : NULL_MOVE;
+    calculateMoveScores(pseudo_legal_moves, best_move);
     bool king_in_check = !move_generator.isKingSafe(board, board.white_to_move);
     for (int i = 0; i < pseudo_legal_moves.size && !search_stopped; i++)
     {
@@ -225,6 +213,66 @@ Score Engine::quiescence(Score lower_bound, Score upper_bound, int ply)
     }
 
     return best_score;
+}
+
+void Engine::calculateMoveScores(MoveList &moves, Move best_move, int ply)
+{
+    bool best_move_provided = best_move != NULL_MOVE;
+    bool en_passant_possible = board.en_passant != NO_EN_PASSANT;
+    bool skip_killer_moves = ply < 0 || ply >= MAX_PV_SEARCH_DEPTH;
+    Piece own_pawn = board.white_to_move ? WHITE_PAWN : BLACK_PAWN;
+    Piece enemy_pawn = board.white_to_move ? BLACK_PAWN : WHITE_PAWN;
+
+    for (int i = 0; i < moves.size; i++)
+    {
+        Move move = moves.moves[i];
+        // search previously best move first, which will likely cause a beta cutoff
+        if (best_move_provided && move == best_move)
+        {
+            moves.scores[i] = POS_INFINITY;
+            continue;
+        }
+
+        // then promotions
+        if (move.isPromotion())
+        {
+            moves.scores[i] = PIECE_VALUES[move.getPromotionPiece(board.white_to_move)] + PROMOTION_VALUE;
+            continue;
+        }
+
+        // then captures according to Most Valuable Victim – Least Valuable Attacker
+        // i.e., prioritize captures of high value with low value pieces
+        Piece moving_piece = board.pieces[move.from];
+        Piece captured_piece = board.pieces[move.to];
+        // update captured piece for en passant captures
+        if (en_passant_possible && move.to == board.en_passant && moving_piece == own_pawn)
+            captured_piece = enemy_pawn;
+        if (captured_piece != EMPTY)
+            moves.scores[i] = PIECE_VALUES[captured_piece] - PIECE_VALUES[moving_piece] + CAPTURE_VALUE;
+        // then quiet non-capture moves
+        else
+            moves.scores[i] = 0;
+        if (skip_killer_moves)
+            continue;
+        if (killer_moves[ply][0] == move)
+            moves.scores[i] = PRIMARY_KILLER_VALUE;
+        else if (killer_moves[ply][1] == move)
+            moves.scores[i] = SECONDARY_KILLER_VALUE;
+    }
+}
+
+void Engine::storeKillerMove(Move move, int ply)
+{
+    // only store quiet moves
+    // others are already prioritized in move ordering
+    if (!move.isQuiet(board))
+        return;
+
+    // least recently used replacement strategy
+    if (move == killer_moves[ply][0])
+        return;
+    killer_moves[ply][1] = killer_moves[ply][0];
+    killer_moves[ply][0] = move;
 }
 
 void Engine::printSearchInfo(int depth, Score score, Move pv_move, Milliseconds &iteration_time)

@@ -349,10 +349,10 @@ Bitboard MoveGenerator::precomputeSlidingBishopAttacks(Position square, Bitboard
     return attacks;
 }
 
-MoveList MoveGenerator::generateLegalMoves(Board &board, bool interesting_only)
+MoveList MoveGenerator::generateLegalMoves(Board &board)
 {
     MoveList legal_moves;
-    MoveList pseudo_legal_moves = generatePseudoLegalMoves(board, interesting_only);
+    MoveList pseudo_legal_moves = generatePseudoLegalMoves(board);
 
     // simulate each move and ensure king (of player making a move) is not in check
     for (int i = 0; i < pseudo_legal_moves.size; i++)
@@ -369,15 +369,15 @@ MoveList MoveGenerator::generateLegalMoves(Board &board, bool interesting_only)
     return legal_moves;
 }
 
-MoveList MoveGenerator::generatePseudoLegalMoves(Board &board, bool interesting_only)
+MoveList MoveGenerator::generatePseudoLegalMoves(Board &board, bool only_non_quiet_moves)
 {
     MoveList moves;
-    generatePawnMoves(board, moves, interesting_only);
-    generateKnightMoves(board, moves, interesting_only);
-    generateBishopMoves(board, moves, interesting_only);
-    generateRookMoves(board, moves, interesting_only);
-    generateQueenMoves(board, moves, interesting_only);
-    generateKingMoves(board, moves, interesting_only);
+    generatePawnMoves(board, moves, only_non_quiet_moves);
+    generateKnightMoves(board, moves, only_non_quiet_moves);
+    generateBishopMoves(board, moves, only_non_quiet_moves);
+    generateRookMoves(board, moves, only_non_quiet_moves);
+    generateQueenMoves(board, moves, only_non_quiet_moves);
+    generateKingMoves(board, moves, only_non_quiet_moves);
     return moves;
 }
 
@@ -387,7 +387,7 @@ bool MoveGenerator::isKingSafe(const Board &board, bool king_is_white)
     return !isSquareUnderAttack(board, king_square, !king_is_white);
 }
 
-void MoveGenerator::generateKingMoves(const Board &board, MoveList &moves, bool interesting_only)
+void MoveGenerator::generateKingMoves(const Board &board, MoveList &moves, bool only_non_quiet_moves)
 {
     bool white_to_move = board.white_to_move;
     Bitboard king = board.piece_bitboards[white_to_move ? WHITE_KING : BLACK_KING];
@@ -396,7 +396,7 @@ void MoveGenerator::generateKingMoves(const Board &board, MoveList &moves, bool 
     // regular moves and attacks
     Position from = getRightmostSetBit(king);
     Bitboard attacks = king_moves[from] & ~own_pieces;
-    if (interesting_only)
+    if (only_non_quiet_moves)
         attacks &= board.occupied; // only consider captures
     while (attacks)
     {
@@ -409,11 +409,11 @@ void MoveGenerator::generateKingMoves(const Board &board, MoveList &moves, bool 
     }
 
     // castling moves
-    if (!interesting_only && !isSquareUnderAttack(board, from, !white_to_move))
+    if (!only_non_quiet_moves && !isSquareUnderAttack(board, from, !white_to_move))
         addCastlingMoves(board, moves);
 }
 
-void MoveGenerator::generatePawnMoves(const Board &board, MoveList &moves, bool interesting_only)
+void MoveGenerator::generatePawnMoves(const Board &board, MoveList &moves, bool only_non_quiet_moves)
 {
     bool white_to_move = board.white_to_move;
     Bitboard pawns = board.piece_bitboards[white_to_move ? WHITE_PAWN : BLACK_PAWN];
@@ -422,7 +422,7 @@ void MoveGenerator::generatePawnMoves(const Board &board, MoveList &moves, bool 
     // right shift for white, left shift for black since negative shift is undefined
     Bitboard single_push = white_to_move ? (pawns << UP) : (pawns >> UP);
     single_push &= ~board.occupied;
-    if (interesting_only)
+    if (only_non_quiet_moves)
         single_push &= PROMOTION_ROWS; // only consider promotions
     else
     {
@@ -470,7 +470,7 @@ void MoveGenerator::generatePawnMoves(const Board &board, MoveList &moves, bool 
     }
 }
 
-void MoveGenerator::generateKnightMoves(const Board &board, MoveList &moves, bool interesting_only)
+void MoveGenerator::generateKnightMoves(const Board &board, MoveList &moves, bool only_non_quiet_moves)
 {
     bool white_to_move = board.white_to_move;
     Bitboard knights = board.piece_bitboards[white_to_move ? WHITE_KNIGHT : BLACK_KNIGHT];
@@ -480,7 +480,7 @@ void MoveGenerator::generateKnightMoves(const Board &board, MoveList &moves, boo
     {
         Position from = clearRightmostSetBit(knights);
         Bitboard attacks = knight_moves[from] & ~own_pieces;
-        if (interesting_only)
+        if (only_non_quiet_moves)
             attacks &= board.occupied; // only consider captures
         while (attacks)
         {
@@ -491,7 +491,7 @@ void MoveGenerator::generateKnightMoves(const Board &board, MoveList &moves, boo
     }
 }
 
-void MoveGenerator::generateBishopMoves(const Board &board, MoveList &moves, bool interesting_only)
+void MoveGenerator::generateBishopMoves(const Board &board, MoveList &moves, bool only_non_quiet_moves)
 {
     bool white_to_move = board.white_to_move;
     Bitboard bishops = board.piece_bitboards[white_to_move ? WHITE_BISHOP : BLACK_BISHOP];
@@ -505,7 +505,7 @@ void MoveGenerator::generateBishopMoves(const Board &board, MoveList &moves, boo
         // after all, they are by definition magic ¯\_(ツ)_/¯
         int magic_index = ((bishop_blockers[from] & board.occupied) * BISHOP_MAGICS[from]) >> (NUM_SQUARES - BISHOP_RELEVANT_SQUARES[from]);
         Bitboard attacks = bishop_attacks[from][magic_index] & ~own_pieces;
-        if (interesting_only)
+        if (only_non_quiet_moves)
             attacks &= board.occupied; // only consider captures
         // add each square attacked by current bishop to moves
         while (attacks)
@@ -517,7 +517,7 @@ void MoveGenerator::generateBishopMoves(const Board &board, MoveList &moves, boo
     }
 }
 
-void MoveGenerator::generateRookMoves(const Board &board, MoveList &moves, bool interesting_only)
+void MoveGenerator::generateRookMoves(const Board &board, MoveList &moves, bool only_non_quiet_moves)
 {
     bool white_to_move = board.white_to_move;
     Bitboard rooks = board.piece_bitboards[white_to_move ? WHITE_ROOK : BLACK_ROOK];
@@ -529,7 +529,7 @@ void MoveGenerator::generateRookMoves(const Board &board, MoveList &moves, bool 
         Position from = clearRightmostSetBit(rooks);
         int magic_index = ((rook_blockers[from] & board.occupied) * ROOK_MAGICS[from]) >> (NUM_SQUARES - ROOK_RELEVANT_SQUARES[from]);
         Bitboard attacks = rook_attacks[from][magic_index] & ~own_pieces;
-        if (interesting_only)
+        if (only_non_quiet_moves)
             attacks &= board.occupied; // only consider captures
         while (attacks)
         {
@@ -540,7 +540,7 @@ void MoveGenerator::generateRookMoves(const Board &board, MoveList &moves, bool 
     }
 }
 
-void MoveGenerator::generateQueenMoves(const Board &board, MoveList &moves, bool interesting_only)
+void MoveGenerator::generateQueenMoves(const Board &board, MoveList &moves, bool only_non_quiet_moves)
 {
     bool white_to_move = board.white_to_move;
 
@@ -554,7 +554,7 @@ void MoveGenerator::generateQueenMoves(const Board &board, MoveList &moves, bool
         Bitboard attacks = rook_attacks[from][rook_magic_index] | bishop_attacks[from][bishop_magic_index];
         Bitboard own_pieces = board.colors[white_to_move];
         attacks &= ~own_pieces;
-        if (interesting_only)
+        if (only_non_quiet_moves)
             attacks &= board.occupied; // only consider captures
         while (attacks)
         {

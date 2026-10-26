@@ -20,6 +20,7 @@ public:
     void setPosition(const std::string &fen);
     Score evaluatePosition();
     void makeMove(Move move, bool store_in_history = true);
+    bool makeMoveIfLegal(Move move);
     void unmakeMove(Move move);
 
     // getter and setter
@@ -33,6 +34,7 @@ public:
 private:
     Board board = Board::generateBoardFromFEN(START_FEN);
     MoveGenerator move_generator = MoveGenerator::getInstance();
+    Move killer_moves[MAX_PV_SEARCH_DEPTH][NUM_KILLER_MOVES];
     TranspositionTable transposition_table;
     ZobristHash zobrist;
     Evaluation eval;
@@ -43,10 +45,10 @@ private:
     bool search_stopped;
     bool use_opening_book;
 
-    bool makeMoveIfLegal(Move move);
-    void calculateMoveScores(MoveList &moves, TranspositionEntry *entry);
     uint64 perft(int remaining_depth, bool divide = false);
     Score pv_search(int depth, int remaining_depth, Score alpha, Score beta);
     Score quiescence(Score alpha, Score beta, int max_depth = MAX_QUIESCENCE_DEPTH);
+    void calculateMoveScores(MoveList &moves, Move move, int ply = -1);
+    void storeKillerMove(Move move, int ply);
     void printSearchInfo(int depth, Score score, Move pv_move, Milliseconds &iteration_time);
 };

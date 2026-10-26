@@ -17,6 +17,7 @@ struct Move
     bool isUndo() const;
     bool isCastling(bool is_king_move) const;
     bool isPromotion() const;
+    bool isQuiet(Board board) const;
     Piece getPromotionPiece(bool white_to_move);
 
     std::string toString() const;
@@ -48,7 +49,7 @@ struct UndoInfo
 
 struct UndoHistory
 {
-    UndoInfo undo_infos[MAX_SEARCH_DEPTH + MAX_QUIESCENCE_DEPTH];
+    UndoInfo undo_infos[MAX_SEARCH_DEPTH];
     int size = 0;
 
     void push(UndoInfo undo);

@@ -48,6 +48,17 @@ bool Move::isPromotion() const
     return promotion & (PROMOTE_TO_QUEEN | PROMOTE_TO_ROOK | PROMOTE_TO_BISHOP | PROMOTE_TO_KNIGHT);
 }
 
+bool Move::isQuiet(Board board) const
+{
+    if (isPromotion())
+        return false;
+    if (board.pieces[to] != EMPTY)
+        return false;
+    if (to == board.en_passant && (board.pieces[from] == (board.white_to_move ? WHITE_PAWN : BLACK_PAWN)))
+        return false;
+    return true;
+}
+
 bool Move::isCastling(bool is_king) const
 {
     if (!is_king)
