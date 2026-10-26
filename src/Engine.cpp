@@ -170,37 +170,38 @@ Score Engine::pv_search(int ply, int remaining_depth, Score lower_bound, Score u
 
 Score Engine::quiescence(Score lower_bound, Score upper_bound, int ply)
 {
-    // use static evaluation as baseline
-    // in case no further captures are possible
-    Score best_score = evaluatePosition();
-    if (best_score >= upper_bound)
-        return best_score;
-    if (best_score > lower_bound)
-        lower_bound = best_score;
+    Score best_score = NEG_INFINITY;
+    if (ply >= MAX_QUIESCENCE_DEPTH)
+        return evaluatePosition();
 
-    // return if max depth exceeded or if current position is really bad (delta pruning)
-    if (ply >= MAX_QUIESCENCE_DEPTH || best_score + DELTA_VALUE < lower_bound)
-        return best_score;
-
+    // try to exit early to avoid searching uninteresting positions
+    bool king_is_safe = move_generator.isKingSafe(board, board.white_to_move);
+    if (king_is_safe)
+    {
+        // use stand pat evaluation (i.e. doing nothing) as baseline
+        best_score = evaluatePosition();
+        if (best_score >= upper_bound)
+            // current position is already good enough for beta cutoff
+            // i.e., opponent will pick another move that is better
+            return best_score;
+        if (best_score < lower_bound - DELTA_VALUE)
+            // delta pruning if current position is really bad
+            return best_score;
+        if (best_score > lower_bound)
+            lower_bound = best_score;
+    }
     // further examine interesting moves (captures, promotions, checks, en passant)
-    MoveList pseudo_legal_moves = move_generator.generatePseudoLegalMoves(board, true);
+    // todo efficiently generate evasion moves if king is in check
+    MoveList pseudo_legal_moves = move_generator.generatePseudoLegalMoves(board, king_is_safe);
     TranspositionEntry *entry = transposition_table.probe(board.hash);
     Move best_move = entry != nullptr ? entry->best_move : NULL_MOVE;
     calculateMoveScores(pseudo_legal_moves, best_move);
-    bool king_in_check = !move_generator.isKingSafe(board, board.white_to_move);
     for (int i = 0; i < pseudo_legal_moves.size && !search_stopped; i++)
     {
-        // only consider interesting moves (captures, promotions, checks, en passant)
         Move move = move_generator.pickBestMove(pseudo_legal_moves);
-        bool is_capture = board.pieces[move.to] != EMPTY;
-        bool is_promotion = move.isPromotion();
-        bool is_en_passant = (move.to == board.en_passant) && (board.pieces[move.from] == (board.white_to_move ? WHITE_PAWN : BLACK_PAWN));
-        bool is_interesting = king_in_check || is_capture || is_promotion || is_en_passant;
-        if (!is_interesting)
-            continue;
-
         if (!makeMoveIfLegal(move))
             continue;
+
         Score score = -quiescence(-upper_bound, -lower_bound, ply + 1);
         unmakeMove(move);
 

@@ -26,3 +26,4 @@
 + setup Sequential Probability Ratio Test
     + evaluates whether a patch makes the engine stronger compared to live version
     + e.g. using fast-chess
++ maybe dynamic delta pruning
