@@ -101,6 +101,10 @@ Score Engine::pv_search(int ply, int remaining_depth, Score lower_bound, Score u
     if (remaining_depth == 0)
         return quiescence(lower_bound, upper_bound, ply);
 
+    // attempt null move pruning
+    if (attemptNullMovePruning(ply, remaining_depth, lower_bound, upper_bound))
+        return upper_bound;
+
     // generate and evaluate moves until pruning possible
     MoveList pseudo_legal_moves = move_generator.generatePseudoLegalMoves(board);
     Score score, best_score = NEG_INFINITY;
@@ -214,6 +218,49 @@ Score Engine::quiescence(Score lower_bound, Score upper_bound, int ply)
     }
 
     return best_score;
+}
+
+bool Engine::attemptNullMovePruning(int ply, int remaining_depth, Score lower_bound, Score &upper_bound)
+{
+    // attempt only once per branch
+    if (allow_null_move_pruning)
+        return false;
+    if (ply < 1)
+        return false;
+    int reduction = NULL_MOVE_REDUCTION_BASE + remaining_depth / NULL_MOVE_REDUCTION_DEPTH_SCALE;
+    if (remaining_depth <= reduction)
+        return false;
+
+    // must move if king is in check
+    bool white_to_move = board.white_to_move;
+    if (!move_generator.isKingSafe(board, white_to_move))
+        return false;
+
+    // no null move pruning if only king and pawns left to avoid zugzwang
+    Bitboard own_king = board.piece_bitboards[white_to_move ? WHITE_KING : BLACK_KING];
+    Bitboard own_pawns = board.piece_bitboards[white_to_move ? WHITE_PAWN : BLACK_PAWN];
+    Bitboard own_pieces = board.colors[white_to_move];
+    if (own_pieces == (own_king | own_pawns))
+        return false;
+
+    // compute the score after a null move (i.e., skipping the current player's turn)
+    allow_null_move_pruning = true;
+    makeMove(NULL_MOVE);
+    Score score = -pv_search(ply + 1, remaining_depth - 1 - reduction, -upper_bound, -upper_bound + 1);
+    unmakeMove(NULL_MOVE);
+    allow_null_move_pruning = false;
+
+    // prune if even after skipping a turn, the position is still good enough for a beta cutoff
+    if (score >= upper_bound)
+    {
+        // print("Null move pruning at ply " + std::to_string(ply) + " with score " + std::to_string(score) + ".");
+        if (score < MIN_MATE_VALUE)
+            upper_bound = score;
+        // else
+        //     print("Not updating upper bound because of checkmate?");
+        return true;
+    }
+    return false;
 }
 
 void Engine::printSearchInfo(int depth, Score score, Move pv_move)

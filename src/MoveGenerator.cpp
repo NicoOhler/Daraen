@@ -622,6 +622,15 @@ UndoInfo MoveGenerator::makeMove(Board &board, Move move)
     undo.castling_rights = board.castling_rights;
     undo.half_move_clock = board.half_move_clock;
 
+    // only switch sides for null moves
+    if (move == NULL_MOVE)
+    {
+        board.half_move_clock = HALF_MOVE_CLOCK_RESET;
+        board.en_passant = NO_EN_PASSANT;
+        board.white_to_move = !board.white_to_move;
+        return undo;
+    }
+
     // capture piece
     if (undo.captured_piece != EMPTY)
     {
@@ -695,6 +704,9 @@ void MoveGenerator::unmakeMove(Board &board, Move move, UndoInfo undo)
     board.half_move_clock = undo.half_move_clock;
     board.castling_rights = undo.castling_rights;
     board.en_passant = undo.en_passant;
+
+    if (move == NULL_MOVE)
+        return;
 
     bool white_to_move = board.white_to_move;
     Piece own_pawn = white_to_move ? WHITE_PAWN : BLACK_PAWN;

@@ -244,7 +244,7 @@
                 "-f",
                 "8/2pR2pk/7p/rP3P2/5q1P/1P6/3N4/3Q2K1 w - - 3 34 ",
                 "-d",
-                "11"
+                "14"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/output",

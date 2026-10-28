@@ -44,10 +44,12 @@ private:
     Milliseconds iteration_time;
     int search_depth;
     bool search_stopped;
+    bool allow_null_move_pruning = false;
     bool use_opening_book;
 
     uint64 perft(int remaining_depth, bool divide = false);
     Score pv_search(int depth, int remaining_depth, Score alpha, Score beta);
     Score quiescence(Score alpha, Score beta, int max_depth = MAX_QUIESCENCE_DEPTH);
+    bool attemptNullMovePruning(int ply, int remaining_depth, Score lower_bound, Score &upper_bound);
     void printSearchInfo(int depth, Score score, Move pv_move);
 };
