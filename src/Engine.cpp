@@ -28,7 +28,7 @@ void Engine::reset()
     search_depth = DEFAULT_SEARCH_DEPTH;
     stopSearch();
     time_management.reset();
-    history.clear();
+    move_order.clear();
     transposition_table.clear();
 }
 
@@ -41,11 +41,11 @@ void Engine::stopSearch(const std::string &reason)
 
 Move Engine::search()
 {
-    evaluated_nodes = 0;
     search_stopped = false;
     Move best_move = NULL_MOVE;
+    evaluated_nodes = 0;
+    iteration_time = 0;
     time_management.start(board.white_to_move);
-    Milliseconds iteration_time = 0;
 
     // iterative deepening
     for (int depth = 1; depth <= search_depth && !search_stopped; depth++)
@@ -58,7 +58,7 @@ Move Engine::search()
 
         // update best move and continue search
         best_move = transposition_table.probe(board.hash)->best_move;
-        printSearchInfo(depth, score, best_move, iteration_time);
+        printSearchInfo(depth, score, best_move);
 
         if (!time_management.sufficientTimeForNextIterationLeft())
             stopSearch("Insufficient time for next iteration after " + convertMillisecondsToTimeString(time_management.getElapsedTime()));
@@ -107,12 +107,12 @@ Score Engine::pv_search(int ply, int remaining_depth, Score lower_bound, Score u
     Move move, best_move = NULL_MOVE;
     if (entry != nullptr)
         best_move = entry->best_move;
-    calculateMoveScores(pseudo_legal_moves, best_move, ply);
+    move_order.calculateMoveScores(board, pseudo_legal_moves, best_move, ply);
 
     bool null_window = false;
     for (int i = 0; i < pseudo_legal_moves.size && !search_stopped; i++)
     {
-        move = move_generator.pickBestMove(pseudo_legal_moves);
+        move = move_order.pickBestMove(pseudo_legal_moves);
         if (!makeMoveIfLegal(move))
             continue;
 
@@ -140,7 +140,7 @@ Score Engine::pv_search(int ply, int remaining_depth, Score lower_bound, Score u
         // i.e., opponent will pick another move that is better
         if (score >= upper_bound)
         {
-            history.update(board, move, ply);
+            move_order.update(board, move, ply);
             break;
         }
 
@@ -196,10 +196,10 @@ Score Engine::quiescence(Score lower_bound, Score upper_bound, int ply)
     MoveList pseudo_legal_moves = move_generator.generatePseudoLegalMoves(board, king_is_safe);
     TranspositionEntry *entry = transposition_table.probe(board.hash);
     Move best_move = entry != nullptr ? entry->best_move : NULL_MOVE;
-    calculateMoveScores(pseudo_legal_moves, best_move);
+    move_order.calculateMoveScores(board, pseudo_legal_moves, best_move);
     for (int i = 0; i < pseudo_legal_moves.size && !search_stopped; i++)
     {
-        Move move = move_generator.pickBestMove(pseudo_legal_moves);
+        Move move = move_order.pickBestMove(pseudo_legal_moves);
         if (!makeMoveIfLegal(move))
             continue;
 
@@ -217,50 +217,7 @@ Score Engine::quiescence(Score lower_bound, Score upper_bound, int ply)
     return best_score;
 }
 
-void Engine::calculateMoveScores(MoveList &moves, Move best_move, int ply)
-{
-    bool best_move_provided = best_move != NULL_MOVE;
-    bool en_passant_possible = board.en_passant != NO_EN_PASSANT;
-    Piece own_pawn = board.white_to_move ? WHITE_PAWN : BLACK_PAWN;
-    Piece enemy_pawn = board.white_to_move ? BLACK_PAWN : WHITE_PAWN;
-
-    bool skip_quiet_moves = ply < 0;
-    Move primary_killer_move = skip_quiet_moves ? NULL_MOVE : history.killer_moves[ply][0];
-    Move secondary_killer_move = skip_quiet_moves ? NULL_MOVE : history.killer_moves[ply][1];
-
-    for (int i = 0; i < moves.size; i++)
-    {
-        Move move = moves.moves[i];
-        // search previously best move first, which will likely cause a beta cutoff
-        if (best_move_provided && move == best_move)
-        {
-            moves.scores[i] = POS_INFINITY;
-            continue;
-        }
-
-        // then promotions
-        if (move.isPromotion())
-        {
-            moves.scores[i] = PIECE_VALUES[move.getPromotionPiece(board.white_to_move)] + PROMOTION_VALUE;
-            continue;
-        }
-
-        // then captures according to Most Valuable Victim – Least Valuable Attacker
-        // i.e., prioritize captures of high value with low value pieces
-        Piece moving_piece = board.pieces[move.from];
-        Piece captured_piece = board.pieces[move.to];
-        // update captured piece for en passant captures
-        if (en_passant_possible && move.to == board.en_passant && moving_piece == own_pawn)
-            captured_piece = enemy_pawn;
-        if (captured_piece != EMPTY)
-            moves.scores[i] = PIECE_VALUES[captured_piece] - PIECE_VALUES[moving_piece] + CAPTURE_VALUE;
-        // then quiet non-capture moves
-        else
-            moves.scores[i] = skip_quiet_moves ? 0 : history.getMoveScore(board, move, ply);
-    }
-}
-
-void Engine::printSearchInfo(int depth, Score score, Move pv_move, Milliseconds &iteration_time)
+void Engine::printSearchInfo(int depth, Score score, Move pv_move)
 {
     std::string info = "info depth " + std::to_string(depth);
     info += " score cp " + std::to_string(score);
@@ -273,6 +230,7 @@ void Engine::printSearchInfo(int depth, Score score, Move pv_move, Milliseconds 
         info += " nps " + std::to_string(1000 * evaluated_nodes / iteration_time);
     }
     print(info);
+    evaluated_nodes = 0;
 }
 
 uint64 Engine::perft()
@@ -314,7 +272,7 @@ bool Engine::makeMoveIfLegal(Move move)
     UndoInfo undo = move_generator.makeMove(board, move);
     if (move_generator.isKingSafe(board, king_color_before_move))
     {
-        history.pushUndo(undo);
+        move_order.pushMove(move, undo);
         zobrist.updateHash(board, move, undo);
         return true;
     }
@@ -326,13 +284,13 @@ void Engine::makeMove(Move move, bool store_in_history)
 {
     UndoInfo undo = move_generator.makeMove(board, move);
     if (store_in_history)
-        history.pushUndo(undo);
+        move_order.pushMove(move, undo);
     zobrist.updateHash(board, move, undo);
 }
 
 void Engine::unmakeMove(Move move)
 {
-    UndoInfo undo = history.popUndo();
+    UndoInfo undo = move_order.popMove();
     zobrist.updateHash(board, move, undo);
     move_generator.unmakeMove(board, move, undo);
 }

@@ -607,27 +607,6 @@ bool MoveGenerator::areSquaresUnderAttack(const Board &board, Bitboard squares, 
     return false;
 }
 
-Move MoveGenerator::pickBestMove(MoveList &moves)
-{
-    int best_move_index = 0;
-    Score best_score = moves.scores[0];
-
-    for (int i = 1; i < moves.size; i++)
-    {
-        Score score = moves.scores[i];
-        if (score == USED_MOVE)
-            continue;
-        if (score > best_score)
-        {
-            best_score = score;
-            best_move_index = i;
-        }
-    }
-
-    moves.scores[best_move_index] = USED_MOVE;
-    return moves.moves[best_move_index];
-}
-
 MoveGenerator &MoveGenerator::getInstance()
 {
     static MoveGenerator instance;

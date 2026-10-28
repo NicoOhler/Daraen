@@ -24,6 +24,7 @@ const LogType REMOVE_ILLEGAL_MOVES = DISABLED;
 const LogType REMAINING_MOVES = DISABLED;
 const LogType PERFT = ENABLED;
 const LogType SEARCH = ENABLED;
+const LogType HISTORY = ENABLED;
 const LogType SEARCH_DEPTHS = ENABLED;
 const LogType FEN = DISABLED;
 const LogType TIME = ENABLED;

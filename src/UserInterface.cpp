@@ -57,7 +57,7 @@ void UserInterface::startBenchmark()
 
 void UserInterface::startSearch()
 {
-    log(CHESS_BOARD, "Starting search");
+    log(SEARCH, "Starting search");
     Move best_move = engine.search();
     if (best_move == NULL_MOVE)
         log(SEARCH, "No legal moves for current board state.");

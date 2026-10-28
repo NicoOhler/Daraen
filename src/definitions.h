@@ -38,7 +38,7 @@ const int MAX_MOVES = 218;
 // not quite min/max of int32 to avoid overflow when negating
 const Score POS_INFINITY = 2147483000;
 const Score NEG_INFINITY = -2147483000;
-const Score USED_MOVE = NEG_INFINITY;
+const Score USED_MOVE = -2147482000;
 const HalfMoveClock HALF_MOVE_CLOCK_RESET = -1;
 const HalfMoveClock HALF_MOVE_CLOCK_LIMIT = 100;
 
