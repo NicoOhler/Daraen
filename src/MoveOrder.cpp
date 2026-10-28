@@ -137,28 +137,7 @@ Move MoveOrder::pickBestMove(MoveList &moves, int start_index)
         std::swap(moves.scores[start_index], moves.scores[best_move_index]);
     }
 
-    return moves.moves[best_move_index];
-}
-
-Move MoveOrder::pickBestMove(MoveList &moves)
-{
-    int best_move_index = 0;
-    Score best_score = moves.scores[0];
-
-    for (int i = 1; i < moves.size; i++)
-    {
-        Score score = moves.scores[i];
-        if (score == USED_MOVE)
-            continue;
-        if (score > best_score)
-        {
-            best_score = score;
-            best_move_index = i;
-        }
-    }
-
-    moves.scores[best_move_index] = USED_MOVE;
-    return moves.moves[best_move_index];
+    return moves.moves[start_index];
 }
 
 void MoveHistory::push(Move move, UndoInfo undo)

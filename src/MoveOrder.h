@@ -43,7 +43,6 @@ public:
 
     void calculateMoveScores(const Board &board, MoveList &moves, Move move, int ply = -1);
     Move pickBestMove(MoveList &moves, int start_index);
-    Move pickBestMove(MoveList &moves);
 
 private:
     MoveHistory undos;

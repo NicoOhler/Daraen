@@ -112,7 +112,7 @@ Score Engine::pv_search(int ply, int remaining_depth, Score lower_bound, Score u
     bool null_window = false;
     for (int i = 0; i < pseudo_legal_moves.size && !search_stopped; i++)
     {
-        move = move_order.pickBestMove(pseudo_legal_moves);
+        move = move_order.pickBestMove(pseudo_legal_moves, i);
         if (!makeMoveIfLegal(move))
             continue;
 
@@ -199,7 +199,7 @@ Score Engine::quiescence(Score lower_bound, Score upper_bound, int ply)
     move_order.calculateMoveScores(board, pseudo_legal_moves, best_move);
     for (int i = 0; i < pseudo_legal_moves.size && !search_stopped; i++)
     {
-        Move move = move_order.pickBestMove(pseudo_legal_moves);
+        Move move = move_order.pickBestMove(pseudo_legal_moves, i);
         if (!makeMoveIfLegal(move))
             continue;
 
