@@ -138,11 +138,10 @@ Score Engine::pv_search(int ply, int remaining_depth, Score lower_bound, Score u
 
         // prune if upper bound exceeded
         // i.e., opponent will pick another move that is better
-        if (score >= upper_bound)
-        {
-            move_order.update(board, move, ply);
+        bool is_cutoff = score >= upper_bound;
+        move_order.trackQuietMove(board, move, ply, remaining_depth, is_cutoff);
+        if (is_cutoff)
             break;
-        }
 
         // update lower bound if exceeded
         if (score > lower_bound)

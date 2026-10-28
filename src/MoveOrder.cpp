@@ -2,77 +2,14 @@
 
 MoveOrder::MoveOrder()
 {
-}
-
-void MoveOrder::update(const Board &board, Move move, int ply)
-{
-    // only store quiet moves
-    // others are already prioritized in move ordering
-    if (!move.isQuiet(board))
-        return;
-
-    if (KILLER_MOVES_ENABLED)
-        updateKillerMove(move, ply);
-    if (GLOBAL_HISTORY_ENABLED)
-        updateGlobalHistory(board.pieces[move.from], move.to, ply);
-}
-
-Score MoveOrder::getMoveScore(const Board &board, Move move, int ply)
-{
-    if (ply < 0)
-        return QUIET_MOVE_SCORE;
-    if (KILLER_MOVES_ENABLED)
+    clear();
+    for (int depth = 0; depth < MAX_PV_SEARCH_DEPTH; depth++)
     {
-        if (move == killer_moves[ply][0])
-            return PRIMARY_KILLER_MOVE_SCORE;
-        else if (move == killer_moves[ply][1])
-            return SECONDARY_KILLER_MOVE_SCORE;
+        // arbitrary bonus formula, can be tuned
+        Score bonus = depth * depth;                                                        // encourages deeper cutoffs that save more time
+        depth_bonus[depth] = std::max(std::min(bonus, MAX_HISTORY), -MAX_HISTORY);          // clamped bonus
+        depth_bonus_normalized[depth] = std::abs(depth_bonus[depth]) / MAX_PV_SEARCH_DEPTH; // normalized bonus
     }
-
-    if (GLOBAL_HISTORY_ENABLED)
-        return global_history[board.pieces[move.from]][move.to];
-    return 0;
-}
-
-void MoveOrder::clear()
-{
-    undos.clear();
-    global_history[NUM_PIECES][NUM_SQUARES] = {0};
-    for (int ply = 0; ply < MAX_PV_SEARCH_DEPTH; ply++)
-        for (int i = 0; i < NUM_KILLER_MOVES; i++)
-            killer_moves[ply][i] = NULL_MOVE;
-}
-
-void MoveOrder::pushMove(Move move, UndoInfo undo)
-{
-    undos.push(move, undo);
-}
-
-UndoInfo MoveOrder::popMove()
-{
-    return undos.pop();
-}
-
-void MoveOrder::updateKillerMove(Move move, int ply)
-{
-    // least recently used replacement strategy
-    if (move == killer_moves[ply][0])
-        return;
-    killer_moves[ply][1] = killer_moves[ply][0];
-    killer_moves[ply][0] = move;
-}
-
-void MoveOrder::updateGlobalHistory(Piece piece, Position to, int ply, bool penalty)
-{
-    // history gravity formula
-    Score bonus = 300 * ply - 250;
-    if (penalty)
-        bonus = -bonus;
-    if (bonus > MAX_HISTORY)
-        bonus = MAX_HISTORY;
-    else if (bonus < -MAX_HISTORY)
-        bonus = -MAX_HISTORY;
-    global_history[piece][to] += bonus - global_history[piece][to] * std::abs(bonus) / MAX_HISTORY;
 }
 
 void MoveOrder::calculateMoveScores(const Board &board, MoveList &moves, Move best_move, int ply)
@@ -109,7 +46,7 @@ void MoveOrder::calculateMoveScores(const Board &board, MoveList &moves, Move be
             moves.scores[i] = PIECE_VALUES[captured_piece] - PIECE_VALUES[moving_piece] + CAPTURE_MOVE_SCORE;
         // then quiet non-capture moves
         else
-            moves.scores[i] = getMoveScore(board, move, ply);
+            moves.scores[i] = getQuietMoveScore(board, move, ply);
     }
 }
 
@@ -138,6 +75,72 @@ Move MoveOrder::pickBestMove(MoveList &moves, int start_index)
     }
 
     return moves.moves[start_index];
+}
+void MoveOrder::trackQuietMove(const Board &board, Move move, int ply, int remaining_depth, bool is_cutoff)
+{
+    if (!move.isQuiet(board))
+        return;
+
+    if (KILLER_MOVES_ENABLED && is_cutoff)
+        storeKillerMove(move, ply);
+    if (GLOBAL_HISTORY_ENABLED)
+        updateGlobalHistory(board.pieces[move.from], move.to, remaining_depth, is_cutoff);
+}
+
+void MoveOrder::storeKillerMove(Move move, int ply)
+{
+    // least recently used replacement strategy
+    if (move == killer_moves[ply][0])
+        return;
+    killer_moves[ply][1] = killer_moves[ply][0];
+    killer_moves[ply][0] = move;
+}
+
+void MoveOrder::updateGlobalHistory(Piece piece, Position to, int remaining_depth, bool penalty)
+{
+    Score bonus = depth_bonus[remaining_depth];
+    if (penalty)
+        bonus = -bonus;
+    // history gravity formula => prevents overflow, larger bonus for unexpected cutoffs, smaller bonus for expected cutoffs^
+    global_history[piece][to] += bonus - global_history[piece][to] * depth_bonus_normalized[remaining_depth];
+}
+
+Score MoveOrder::getQuietMoveScore(const Board &board, Move move, int ply)
+{
+    Score score = QUIET_MOVE_SCORE;
+    if (ply < 0)
+        return score;
+
+    if (KILLER_MOVES_ENABLED)
+    {
+        if (move == killer_moves[ply][0])
+            score += PRIMARY_KILLER_MOVE_SCORE;
+        else if (move == killer_moves[ply][1])
+            score += SECONDARY_KILLER_MOVE_SCORE;
+    }
+
+    if (GLOBAL_HISTORY_ENABLED)
+        score += global_history[board.pieces[move.from]][move.to];
+    return score;
+}
+
+void MoveOrder::clear()
+{
+    undos.clear();
+    global_history[NUM_PIECES][NUM_SQUARES] = {0};
+    for (int ply = 0; ply < MAX_PV_SEARCH_DEPTH; ply++)
+        for (int i = 0; i < NUM_KILLER_MOVES; i++)
+            killer_moves[ply][i] = NULL_MOVE;
+}
+
+void MoveOrder::pushMove(Move move, UndoInfo undo)
+{
+    undos.push(move, undo);
+}
+
+UndoInfo MoveOrder::popMove()
+{
+    return undos.pop();
 }
 
 void MoveHistory::push(Move move, UndoInfo undo)

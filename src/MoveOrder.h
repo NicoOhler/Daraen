@@ -34,20 +34,19 @@ public:
     MoveOrder();
     Move killer_moves[MAX_PV_SEARCH_DEPTH][NUM_KILLER_MOVES];
 
-    void update(const Board &board, Move move, int ply);
-    Score getMoveScore(const Board &board, Move move, int ply);
-    void clear();
-
-    void pushMove(Move move, UndoInfo undo);
-    UndoInfo popMove();
-
     void calculateMoveScores(const Board &board, MoveList &moves, Move move, int ply = -1);
     Move pickBestMove(MoveList &moves, int start_index);
+    void trackQuietMove(const Board &board, Move move, int ply, int remaining_depth, bool is_cutoff);
+    Score getQuietMoveScore(const Board &board, Move move, int ply);
+    void pushMove(Move move, UndoInfo undo);
+    UndoInfo popMove();
+    void clear();
 
 private:
     MoveHistory undos;
     Score global_history[NUM_PIECES][NUM_SQUARES] = {QUIET_MOVE_SCORE}; // [piece][to]
-
-    void updateKillerMove(Move move, int ply);
-    void updateGlobalHistory(Piece piece, Position to, int ply, bool penalty = false);
+    Score depth_bonus[MAX_PV_SEARCH_DEPTH];                             // [depth]
+    Score depth_bonus_normalized[MAX_PV_SEARCH_DEPTH];                  // [depth]
+    void storeKillerMove(Move move, int ply);
+    void updateGlobalHistory(Piece piece, Position to, int remaining_depth, bool penalty);
 };
