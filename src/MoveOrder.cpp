@@ -81,8 +81,13 @@ void MoveOrder::trackQuietMove(const Board &board, Move move, int ply, int remai
     if (!move.isQuiet(board))
         return;
 
-    if (KILLER_MOVES_ENABLED && is_cutoff)
-        storeKillerMove(move, ply);
+    if (is_cutoff)
+    {
+        if (KILLER_MOVES_ENABLED)
+            storeKillerMove(move, ply);
+        if (COUNTER_MOVES_ENABLED)
+            storeCounterMove(move);
+    }
     if (GLOBAL_HISTORY_ENABLED)
         updateGlobalHistory(board.pieces[move.from], move.to, remaining_depth, is_cutoff);
 }
@@ -94,6 +99,11 @@ void MoveOrder::storeKillerMove(Move move, int ply)
         return;
     killer_moves[ply][1] = killer_moves[ply][0];
     killer_moves[ply][0] = move;
+}
+
+void MoveOrder::storeCounterMove(Move move)
+{
+    counter_moves[previous_move_from][previous_move_to] = move;
 }
 
 void MoveOrder::updateGlobalHistory(Piece piece, Position to, int remaining_depth, bool penalty)
@@ -119,6 +129,10 @@ Score MoveOrder::getQuietMoveScore(const Board &board, Move move, int ply)
             score += SECONDARY_KILLER_MOVE_SCORE;
     }
 
+    if (COUNTER_MOVES_ENABLED)
+        if (move == counter_moves[previous_move_from][previous_move_to])
+            score += COUNTER_MOVE_SCORE;
+
     if (GLOBAL_HISTORY_ENABLED)
         score += global_history[board.pieces[move.from]][move.to];
     return score;
@@ -126,40 +140,37 @@ Score MoveOrder::getQuietMoveScore(const Board &board, Move move, int ply)
 
 void MoveOrder::clear()
 {
-    undos.clear();
-    global_history[NUM_PIECES][NUM_SQUARES] = {0};
+    num_moves = 0;
+    previous_move_from = 0;
+    previous_move_to = 0;
     for (int ply = 0; ply < MAX_PV_SEARCH_DEPTH; ply++)
         for (int i = 0; i < NUM_KILLER_MOVES; i++)
             killer_moves[ply][i] = NULL_MOVE;
+    for (int i = 0; i < NUM_PIECES; i++)
+        for (int j = 0; j < NUM_SQUARES; j++)
+            global_history[i][j] = QUIET_MOVE_SCORE;
+    for (int from = 0; from < NUM_SQUARES; from++)
+        for (int to = 0; to < NUM_SQUARES; to++)
+            counter_moves[from][to] = NULL_MOVE;
 }
 
-void MoveOrder::pushMove(Move move, UndoInfo undo)
+void MoveOrder::pushMoveToHistory(Move move, UndoInfo undo)
 {
-    undos.push(move, undo);
+    previous_move_from = move.from;
+    previous_move_to = move.to;
+    moves[num_moves] = move;
+    undo_infos[num_moves++] = undo;
 }
 
-UndoInfo MoveOrder::popMove()
+UndoInfo MoveOrder::popMoveFromHistory()
 {
-    return undos.pop();
+    --num_moves;
+    previous_move_from = moves[num_moves].from;
+    previous_move_to = moves[num_moves].to;
+    return undo_infos[num_moves];
 }
 
-void MoveHistory::push(Move move, UndoInfo undo)
+Move MoveOrder::peekAtHistory() const
 {
-    moves[size] = move;
-    undo_infos[size++] = undo;
-}
-
-UndoInfo MoveHistory::pop()
-{
-    return undo_infos[--size];
-}
-
-Move MoveHistory::peek() const
-{
-    return moves[size - 1];
-}
-
-void MoveHistory::clear()
-{
-    size = 0;
+    return moves[num_moves - 1];
 }

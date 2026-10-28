@@ -271,7 +271,7 @@ bool Engine::makeMoveIfLegal(Move move)
     UndoInfo undo = move_generator.makeMove(board, move);
     if (move_generator.isKingSafe(board, king_color_before_move))
     {
-        move_order.pushMove(move, undo);
+        move_order.pushMoveToHistory(move, undo);
         zobrist.updateHash(board, move, undo);
         return true;
     }
@@ -283,13 +283,13 @@ void Engine::makeMove(Move move, bool store_in_history)
 {
     UndoInfo undo = move_generator.makeMove(board, move);
     if (store_in_history)
-        move_order.pushMove(move, undo);
+        move_order.pushMoveToHistory(move, undo);
     zobrist.updateHash(board, move, undo);
 }
 
 void Engine::unmakeMove(Move move)
 {
-    UndoInfo undo = move_order.popMove();
+    UndoInfo undo = move_order.popMoveFromHistory();
     zobrist.updateHash(board, move, undo);
     move_generator.unmakeMove(board, move, undo);
 }
