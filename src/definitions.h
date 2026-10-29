@@ -71,8 +71,8 @@ const Milliseconds SUFFICIENT_TIME_FOR_NEXT_ITERATION_FACTOR = 2; // 15;
 
 // benchmark
 const int BENCHMARK_PERFT_DEPTH = 6;
-const int BENCHMARK_SEARCH_DEPTH = 9;
-const int BENCHMARK_EVALUATION_COUNT = 100000;
+const int BENCHMARK_SEARCH_DEPTH = 11;
+const int BENCHMARK_EVALUATION_TIME_S = 1;
 
 // game state
 const std::string IN_PROGRESS = "In Progress";

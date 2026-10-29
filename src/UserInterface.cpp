@@ -48,11 +48,18 @@ void UserInterface::startBenchmark()
     engine.search();
     timer.stop(BENCHMARK);
 
-    log(BENCHMARK, "Evaluation of the current board state " + std::to_string(BENCHMARK_EVALUATION_COUNT) + " times.");
+    log(BENCHMARK, "Counting how many evaluations can be performed in " + std::to_string(BENCHMARK_EVALUATION_TIME_S) + " seconds.");
     timer.start();
-    for (int i = 0; i < BENCHMARK_EVALUATION_COUNT; i++)
+    for (uint64 evalulations = 0;; evalulations++)
+    {
         engine.evaluatePosition();
-    timer.stop(BENCHMARK);
+        if (evalulations % 1000 == 0 && timer.getElapsedTime() > BENCHMARK_EVALUATION_TIME_S * 1000)
+        {
+            log(BENCHMARK, "Evaluations performed: " + getFormattedInteger(evalulations) + ", Evaluations per second: " + getFormattedInteger(evalulations / BENCHMARK_EVALUATION_TIME_S));
+            break;
+        }
+    }
+    // timer.stop(BENCHMARK);
 }
 
 void UserInterface::startSearch()

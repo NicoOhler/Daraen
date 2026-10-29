@@ -117,3 +117,14 @@ bool getBoolFromString(const std::string &str)
     else
         throw std::invalid_argument("Invalid boolean string: " + str);
 }
+
+std::string convertMillisecondsToTimeString(Milliseconds milliseconds)
+{
+    int hours = milliseconds / 3600000;
+    milliseconds %= 3600000;
+    int minutes = milliseconds / 60000;
+    milliseconds %= 60000;
+    int seconds = milliseconds / 1000;
+    milliseconds %= 1000;
+    return std::to_string(hours) + "h " + std::to_string(minutes) + "m " + std::to_string(seconds) + "s " + std::to_string(milliseconds) + "ms";
+}
