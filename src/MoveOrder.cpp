@@ -6,9 +6,14 @@ MoveOrder::MoveOrder()
     for (int depth = 0; depth < MAX_PV_SEARCH_DEPTH; depth++)
     {
         // arbitrary bonus formula, can be tuned
-        Score bonus = depth * depth;                                                        // encourages deeper cutoffs that save more time
-        depth_bonus[depth] = std::max(std::min(bonus, MAX_HISTORY), -MAX_HISTORY);          // clamped bonus
-        depth_bonus_normalized[depth] = std::abs(depth_bonus[depth]) / MAX_PV_SEARCH_DEPTH; // normalized bonus
+        Score bonus = depth * depth;
+        // clamp bonus to prevent overflow and underflow
+        if (bonus > MAX_HISTORY)
+            bonus = MAX_HISTORY;
+        if (bonus < -MAX_HISTORY)
+            bonus = -MAX_HISTORY;
+        depth_bonus[depth] = bonus;
+        depth_bonus_normalized[depth] = std::abs(bonus) / MAX_PV_SEARCH_DEPTH;
     }
 }
 

@@ -2,6 +2,8 @@
 #include "definitions.h"
 #include "Bitboard.h"
 
+const Position NO_EN_PASSANT = -100;
+
 struct Board // represents game state
 {
     Board() : white_to_move(true),

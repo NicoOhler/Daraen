@@ -21,12 +21,15 @@ const Bitboard BLACK_KING_START = 0x1000000000000000;
 
 const Bitboard LEFT_COL = 0x0101010101010101;
 const Bitboard RIGHT_COL = 0x8080808080808080;
-const Bitboard WHITE_DOUBLE_PUSH_ROW = 0x0000000000FF0000;
-const Bitboard BLACK_DOUBLE_PUSH_ROW = 0x0000FF0000000000;
+const Bitboard WHITE_PAWN_START_ROW = 0x000000000000FF00;
+const Bitboard BLACK_PAWN_START_ROW = 0x00FF000000000000;
+const Bitboard WHITE_DOUBLE_PUSH_SKIPPED_ROW = 0x0000000000FF0000;
+const Bitboard BLACK_DOUBLE_PUSH_SKIPPED_ROW = 0x0000FF0000000000;
+const Bitboard WHITE_DOUBLE_PUSH_ROW = 0x00000000FF000000;
+const Bitboard BLACK_DOUBLE_PUSH_ROW = 0x000000FF00000000;
 const Bitboard PROMOTION_ROWS = 0xFF000000000000FF;
 const Bitboard WHITE_PIECES = 0x000000000000FFFF;
 const Bitboard BLACK_PIECES = 0xFFFF000000000000;
-const Position NO_EN_PASSANT = -100;
 
 // castling
 const Bitboard WHITE_KING_CASTLING_FREE_SQUARES = 0x0000000000000060;
@@ -70,17 +73,17 @@ inline void toggle(Bitboard &board, Position position)
     board ^= (1ULL << position);
 }
 
-inline bool isSet(const Bitboard &board, Position position)
+inline bool isSet(Bitboard board, Position position)
 {
     return (board & (1ULL << position)) != 0;
 }
 
-inline Position getRightmostSetBit(const Bitboard &board)
+inline Position getRightmostSetBit(Bitboard board)
 {
     return __builtin_ctzll(board);
 }
 
-inline int8 countSetBits(const Bitboard &board)
+inline int8 countSetBits(Bitboard board)
 {
     return __builtin_popcountll(board);
 }
@@ -93,6 +96,4 @@ inline Position clearRightmostSetBit(Bitboard &board)
     return index_of_LSB;
 }
 
-std::vector<bool> getBits(const Bitboard &board);
-
-void printBitboard(const Bitboard &board, const std::string &title);
+void printBitboard(Bitboard board, const std::string &title);

@@ -1,16 +1,11 @@
 #include "Bitboard.h"
 
-std::vector<bool> getBits(const Bitboard &board)
+void printBitboard(const Bitboard &board, const std::string &title)
 {
     std::vector<bool> bits(NUM_SQUARES);
     for (int i = 0; i < NUM_SQUARES; i++)
         bits[i] = board & (1ULL << i);
-    return bits;
-}
 
-void printBitboard(const Bitboard &board, const std::string &title)
-{
-    std::vector<bool> bits = getBits(board);
     std::cout << title << std::endl;
     for (Position row = NUM_ROWS - 1; row >= 0; row--)
     {

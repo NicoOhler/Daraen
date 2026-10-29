@@ -11,6 +11,12 @@ MoveGenerator::MoveGenerator()
     initializeCastlingRightsUpdate();
 }
 
+MoveGenerator &MoveGenerator::getInstance()
+{
+    static MoveGenerator instance;
+    return instance;
+}
+
 void MoveGenerator::initializePawnCaptureMasks()
 {
     log(MOVE_GENERATOR, "Initializing pawn capture masks.");
@@ -426,7 +432,7 @@ void MoveGenerator::generatePawnMoves(const Board &board, MoveList &moves, bool 
         single_push &= PROMOTION_ROWS; // only consider promotions
     else
     {
-        Bitboard double_push = white_to_move ? ((single_push & WHITE_DOUBLE_PUSH_ROW) << 8) : ((single_push & BLACK_DOUBLE_PUSH_ROW) >> 8);
+        Bitboard double_push = white_to_move ? ((single_push & WHITE_DOUBLE_PUSH_SKIPPED_ROW) << 8) : ((single_push & BLACK_DOUBLE_PUSH_SKIPPED_ROW) >> 8);
         double_push &= ~board.occupied;
         while (double_push)
         {
@@ -607,12 +613,6 @@ bool MoveGenerator::areSquaresUnderAttack(const Board &board, Bitboard squares, 
     return false;
 }
 
-MoveGenerator &MoveGenerator::getInstance()
-{
-    static MoveGenerator instance;
-    return instance;
-}
-
 UndoInfo MoveGenerator::makeMove(Board &board, Move move)
 {
     // store information needed for unmake before actually making the move
@@ -758,17 +758,15 @@ void MoveGenerator::unmakeMove(Board &board, Move move, UndoInfo undo)
 
 void MoveGenerator::detectDoublePawnPushForEnPassant(Board &board, Move move)
 {
-    Position from_row = getRow(move.from);
-    Position to_row = getRow(move.to);
     board.en_passant = NO_EN_PASSANT;
     // mark en passant square if a pawn moved two squares forward and an enemy pawn can capture it
-    if (board.white_to_move && (from_row == ROW_2 && to_row == ROW_4))
+    if (board.white_to_move && (isSet(WHITE_PAWN_START_ROW, move.from) && isSet(WHITE_DOUBLE_PUSH_ROW, move.to)))
     {
         Position ep_square = move.from + UP;
         if ((white_pawn_attack_left[ep_square] | white_pawn_attack_right[ep_square]) & board.piece_bitboards[BLACK_PAWN])
             board.en_passant = ep_square;
     }
-    else if (!board.white_to_move && (from_row == ROW_7 && to_row == ROW_5))
+    else if (!board.white_to_move && (isSet(BLACK_PAWN_START_ROW, move.from) && isSet(BLACK_DOUBLE_PUSH_ROW, move.to)))
     {
         Position ep_square = move.from + DOWN;
         if ((black_pawn_attack_left[ep_square] | black_pawn_attack_right[ep_square]) & board.piece_bitboards[WHITE_PAWN])

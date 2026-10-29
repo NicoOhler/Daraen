@@ -62,11 +62,6 @@ Piece getPieceFromSymbol(char symbol)
     }
 }
 
-uint64 modPow2(uint64 n, uint64 m)
-{
-    return n & (m - 1); // fast modulo for power of 2
-}
-
 std::string getFormattedPercentage(uint64 numerator, uint64 denominator, int precision)
 {
     if (denominator == 0)

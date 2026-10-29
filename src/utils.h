@@ -9,12 +9,15 @@
 #include <mutex>
 
 // board utilities
+constexpr uint64 modPow2(uint64 n, uint64 m)
+{
+    return n & (m - 1); // fast modulo for power of 2
+}
 Position getRow(Position square);
 Position getCol(Position square);
 Position getSquareIndex(const std::string &square);
 Piece getPieceFromSymbol(char symbol);
 std::string getSquareName(Position square);
-uint64 modPow2(uint64 n, uint64 m);
 
 // input/output
 std::string readLineFromStdin();

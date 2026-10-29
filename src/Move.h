@@ -40,8 +40,8 @@ struct Move
     }
 };
 
-inline constexpr Move UNDO_MOVE = Move{0, 0, UNDO};
-inline constexpr Move NULL_MOVE = Move{0, 0, NO_PROMOTION};
+const Move UNDO_MOVE = Move{0, 0, UNDO};
+const Move NULL_MOVE = Move{0, 0, NO_PROMOTION};
 
 struct MoveList
 {

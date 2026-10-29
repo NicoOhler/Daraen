@@ -4,13 +4,12 @@
 #include "Evaluation.h"
 #include "definitions.h"
 
-#define KILLER_MOVES_ENABLED true
-#define GLOBAL_HISTORY_ENABLED false
-#define COUNTER_MOVES_ENABLED false
-
-#define MAX_HISTORY 16384
+const bool KILLER_MOVES_ENABLED = true;
+const bool GLOBAL_HISTORY_ENABLED = false;
+const bool COUNTER_MOVES_ENABLED = false;
 
 // move ordering values
+const Score MAX_HISTORY = 16384;
 const Score PROMOTION_MOVE_SCORE = 400000;
 const Score CAPTURE_MOVE_SCORE = 200000;
 const Score PRIMARY_KILLER_MOVE_SCORE = CAPTURE_MOVE_SCORE / 10 * 9;
