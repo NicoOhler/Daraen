@@ -15,10 +15,12 @@ TranspositionEntry *TranspositionTable::probe(Hash hash)
     TranspositionEntry &entry = table[index];
     if (entry.hash != hash)
     {
-        cache_misses++;
+        if (entry.hash != 0)
+            hash_probe_collisions++;
+        hash_probe_misses++;
         return nullptr;
     }
-    cache_hits++;
+    hash_probe_hits++;
     return &entry;
 }
 
@@ -26,6 +28,11 @@ void TranspositionTable::store(Hash hash, Score score, Move best_move, int remai
 {
     Hash index = modPow2(hash, table_size);
     TranspositionEntry &entry = table[index];
+
+    hash_store_attempts++;
+
+    if (entry.hash != 0 && entry.hash != hash)
+        hash_store_collisions++;
 
     // do not store if present entry has greater depth
     if (entry.remaining_depth > remaining_depth)
@@ -35,6 +42,7 @@ void TranspositionTable::store(Hash hash, Score score, Move best_move, int remai
     if (entry.hash == hash && (entry.type == EXACT && type != EXACT))
         return;
 
+    hash_store_updates++;
     entry.hash = hash;
     entry.score = score;
     entry.best_move = best_move;
@@ -54,8 +62,12 @@ BoundType TranspositionTable::getBoundType(Score score, Score lower_bound, Score
 
 void TranspositionTable::clear()
 {
-    cache_hits = 0;
-    cache_misses = 0;
+    hash_probe_hits = 0;
+    hash_probe_misses = 0;
+    hash_probe_collisions = 0;
+    hash_store_attempts = 0;
+    hash_store_updates = 0;
+    hash_store_collisions = 0;
     for (uint64 i = 0; i < table_size; i++)
     {
         table[i].hash = 0;
@@ -66,16 +78,18 @@ void TranspositionTable::clear()
     }
 }
 
-void TranspositionTable::printHitRate()
+void TranspositionTable::printStatistics()
 {
-    uint64 total_accesses = cache_hits + cache_misses;
-    if (total_accesses == 0)
-    {
-        log(TRANSPOSITION_TABLE, "Transposition Table Hit Rate: No accesses yet.");
-        return;
-    }
-    double hit_rate = (double)cache_hits / total_accesses * 100.0;
-    log(TRANSPOSITION_TABLE, "Transposition Table Hits: " + std::to_string(cache_hits) + ", Misses: " + std::to_string(cache_misses) + ", Accesses: " + std::to_string(total_accesses) + ", Hit Rate: " + std::to_string(hit_rate) + "%");
+    log(TRANSPOSITION_TABLE, "Transposition Table Statistics:");
+    uint64 hash_probes = hash_probe_hits + hash_probe_misses;
+    std::string hit_rate = getRoundedPercentageString(hash_probe_hits, hash_probes);
+    log(TRANSPOSITION_TABLE, "\tProbe Hits: " + std::to_string(hash_probe_hits) + ", Misses: " + std::to_string(hash_probe_misses) + ", Accesses: " + std::to_string(hash_probes) + ", Hit Rate: " + hit_rate);
+    std::string store_scuccess_rate = getRoundedPercentageString(hash_store_updates, hash_store_attempts);
+    log(TRANSPOSITION_TABLE, "\tStore Attempts: " + std::to_string(hash_store_attempts) + ", Updates: " + std::to_string(hash_store_updates) + ", Success Rate: " + store_scuccess_rate);
+    std::string store_collision_rate = getRoundedPercentageString(hash_store_collisions, hash_store_attempts);
+    log(TRANSPOSITION_TABLE, "\tHash Store Collisions: " + std::to_string(hash_store_collisions) + ", Store Collision Rate: " + store_collision_rate);
+    std::string probe_collision_rate = getRoundedPercentageString(hash_probe_collisions, hash_probes);
+    log(TRANSPOSITION_TABLE, "\tHash Probe Collisions: " + std::to_string(hash_probe_collisions) + ", Probe Collision Rate: " + probe_collision_rate);
 }
 
 Score computeTranspositionScore(Score score, int ply)

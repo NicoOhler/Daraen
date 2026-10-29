@@ -67,6 +67,16 @@ uint64 modPow2(uint64 n, uint64 m)
     return n & (m - 1); // fast modulo for power of 2
 }
 
+std::string getRoundedPercentageString(uint64 numerator, uint64 denominator, int precision)
+{
+    if (denominator == 0)
+        return "0%";
+    double percentage = 100 * static_cast<double>(numerator) / denominator;
+    std::stringstream string_stream;
+    string_stream << std::fixed << std::setprecision(2) << percentage << "%";
+    return string_stream.str();
+}
+
 void print(const std::string &message, bool newline)
 {
     std::cout << message;

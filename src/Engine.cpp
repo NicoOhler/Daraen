@@ -62,8 +62,8 @@ Move Engine::search()
 
         if (!time_management.sufficientTimeForNextIterationLeft())
             stopSearch("Insufficient time for next iteration after " + convertMillisecondsToTimeString(time_management.getElapsedTime()));
+        transposition_table.printStatistics();
     }
-    // transposition_table.printHitRate();
     return best_move;
 }
 
@@ -223,7 +223,7 @@ Score Engine::quiescence(Score lower_bound, Score upper_bound, int ply)
 bool Engine::attemptNullMovePruning(int ply, int remaining_depth, Score lower_bound, Score &upper_bound)
 {
     // attempt only once per branch
-    if (allow_null_move_pruning)
+    if (!allow_null_move_pruning)
         return false;
     if (ply < 1)
         return false;
@@ -243,12 +243,16 @@ bool Engine::attemptNullMovePruning(int ply, int remaining_depth, Score lower_bo
     if (own_pieces == (own_king | own_pawns))
         return false;
 
+    // todo no null move pruning if already behind
+    // if (evaluatePosition() <= upper_bound)
+    //     return false;
+
     // compute the score after a null move (i.e., skipping the current player's turn)
-    allow_null_move_pruning = true;
+    allow_null_move_pruning = false;
     makeMove(NULL_MOVE);
     Score score = -pv_search(ply + 1, remaining_depth - 1 - reduction, -upper_bound, -upper_bound + 1);
     unmakeMove(NULL_MOVE);
-    allow_null_move_pruning = false;
+    allow_null_move_pruning = true;
 
     // prune if even after skipping a turn, the position is still good enough for a beta cutoff
     if (score >= upper_bound)

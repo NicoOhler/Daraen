@@ -36,11 +36,17 @@ public:
     void store(Hash hash, Score score, Move best_move, int remaining_depth, BoundType type);
     BoundType getBoundType(Score score, Score lower_bound, Score upper_bound);
     void clear();
-    void printHitRate();
+    void printStatistics();
 
 private:
     uint64 table_size;
     TranspositionEntry *table;
-    uint64 cache_hits = 0;
-    uint64 cache_misses = 0;
+
+    // statistics
+    uint64 hash_store_attempts = 0;
+    uint64 hash_store_updates = 0;
+    uint64 hash_store_collisions = 0;
+    uint64 hash_probe_collisions = 0;
+    uint64 hash_probe_hits = 0;
+    uint64 hash_probe_misses = 0;
 };

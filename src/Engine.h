@@ -44,7 +44,7 @@ private:
     Milliseconds iteration_time;
     int search_depth;
     bool search_stopped;
-    bool allow_null_move_pruning = false;
+    bool allow_null_move_pruning = true;
     bool use_opening_book;
 
     uint64 perft(int remaining_depth, bool divide = false);
