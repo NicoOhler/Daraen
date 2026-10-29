@@ -4,18 +4,18 @@
 #include "Evaluation.h"
 #include "definitions.h"
 
-const bool KILLER_MOVES_ENABLED = true;
-const bool GLOBAL_HISTORY_ENABLED = false;
-const bool COUNTER_MOVES_ENABLED = false;
+constexpr bool KILLER_MOVES_ENABLED = true;
+constexpr bool GLOBAL_HISTORY_ENABLED = false;
+constexpr bool COUNTER_MOVES_ENABLED = false;
 
 // move ordering values
-const Score MAX_HISTORY = 16384;
-const Score PROMOTION_MOVE_SCORE = 400000;
-const Score CAPTURE_MOVE_SCORE = 200000;
-const Score PRIMARY_KILLER_MOVE_SCORE = CAPTURE_MOVE_SCORE / 10 * 9;
-const Score SECONDARY_KILLER_MOVE_SCORE = CAPTURE_MOVE_SCORE / 10 * 8;
-const Score COUNTER_MOVE_SCORE = CAPTURE_MOVE_SCORE / 10;
-const Score QUIET_MOVE_SCORE = 1;
+constexpr Score MAX_HISTORY = 16384;
+constexpr Score PROMOTION_MOVE_SCORE = 400000;
+constexpr Score CAPTURE_MOVE_SCORE = 200000;
+constexpr Score PRIMARY_KILLER_MOVE_SCORE = CAPTURE_MOVE_SCORE / 10 * 9;
+constexpr Score SECONDARY_KILLER_MOVE_SCORE = CAPTURE_MOVE_SCORE / 10 * 8;
+constexpr Score COUNTER_MOVE_SCORE = CAPTURE_MOVE_SCORE / 10;
+constexpr Score QUIET_MOVE_SCORE = 1;
 
 class MoveOrder
 {

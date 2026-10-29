@@ -62,7 +62,7 @@ Move Engine::search()
 
         if (!time_management.sufficientTimeForNextIterationLeft())
             stopSearch("Insufficient time for next iteration after " + convertMillisecondsToTimeString(time_management.getElapsedTime()));
-        tt.printStatistics();
+        // tt.printStatistics();
     }
     return best_move;
 }

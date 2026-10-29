@@ -4,7 +4,7 @@ TranspositionTable::TranspositionTable(int megabytes)
 {
     uint64 required_size = megabytes * 1024 * 1024 / sizeof(TranspositionEntry);
     table_size = 1;
-    while (table_size <= required_size)
+    while (table_size * 2 <= required_size)
         table_size *= 2;
     table = new TranspositionEntry[table_size]();
 }
@@ -24,6 +24,8 @@ TranspositionEntry *TranspositionTable::probe(Hash hash)
     return &entry;
 }
 
+// todo bucket system instead of single entry per index, to reduce collisions
+// e.g. one slot for latest entry, one slot for deepest entry
 void TranspositionTable::store(Hash hash, Score score, Move best_move, int remaining_depth, BoundType type)
 {
     Hash index = modPow2(hash, table_size);
@@ -35,6 +37,7 @@ void TranspositionTable::store(Hash hash, Score score, Move best_move, int remai
         hash_store_collisions++;
 
     // do not store if present entry has greater depth
+    // todo implement some aging since deep nodes from early in the game lose relevance later in the game
     if (entry.remaining_depth > remaining_depth)
         return;
 

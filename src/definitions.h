@@ -26,53 +26,53 @@ typedef std::string GameState;
 typedef signed char HalfMoveClock;
 typedef int32 Milliseconds;
 
-// basic constants
-const Position NUM_SQUARES = 64;
-const int8 NUM_COLORS = 2;
-const int8 NUM_PIECES = 12;
-const int8 NUM_ROWS = 8;
-const int8 NUM_COLS = 8;
-const int8 NUM_CASTLING_RIGHTS = 4;
+// basic constexprants
+constexpr Position NUM_SQUARES = 64;
+constexpr int8 NUM_COLORS = 2;
+constexpr int8 NUM_PIECES = 12;
+constexpr int8 NUM_ROWS = 8;
+constexpr int8 NUM_COLS = 8;
+constexpr int8 NUM_CASTLING_RIGHTS = 4;
 const std::string START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-const int MAX_MOVES = 218;
+constexpr int MAX_MOVES = 218;
 // not quite min/max of int32 to avoid overflow when negating
-const Score POS_INFINITY = 2147483000;
-const Score NEG_INFINITY = -2147483000;
-const Score USED_MOVE = -2147482000;
-const HalfMoveClock HALF_MOVE_CLOCK_RESET = -1;
-const HalfMoveClock HALF_MOVE_CLOCK_LIMIT = 100;
+constexpr Score POS_INFINITY = 2147483000;
+constexpr Score NEG_INFINITY = -2147483000;
+constexpr Score USED_MOVE = -2147482000;
+constexpr HalfMoveClock HALF_MOVE_CLOCK_RESET = -1;
+constexpr HalfMoveClock HALF_MOVE_CLOCK_LIMIT = 100;
 
 // directions
-const Position UP = 8;
-const Position DOWN = -8;
-const Position LEFT = -1;
-const Position RIGHT = 1;
-const Position UP_LEFT = 7;
-const Position UP_RIGHT = 9;
-const Position DOWN_LEFT = -9;
-const Position DOWN_RIGHT = -7;
+constexpr Position UP = 8;
+constexpr Position DOWN = -8;
+constexpr Position LEFT = -1;
+constexpr Position RIGHT = 1;
+constexpr Position UP_LEFT = 7;
+constexpr Position UP_RIGHT = 9;
+constexpr Position DOWN_LEFT = -9;
+constexpr Position DOWN_RIGHT = -7;
 
 // engine
-const int MAX_PV_SEARCH_DEPTH = 20;
-const int MAX_QUIESCENCE_DEPTH = 10;
-const int MAX_SEARCH_DEPTH = MAX_PV_SEARCH_DEPTH + MAX_QUIESCENCE_DEPTH;
-const int DEFAULT_PERFT_DEPTH = 10;
-const int DEFAULT_SEARCH_DEPTH = MAX_PV_SEARCH_DEPTH;
-const int NULL_MOVE_REDUCTION_BASE = 2;
-const int NULL_MOVE_REDUCTION_DEPTH_SCALE = 5;
-const int NUM_KILLER_MOVES = 2;
-const int TRANSPOSITION_TABLE_SIZE_MB = 1024;
+constexpr int MAX_PV_SEARCH_DEPTH = 20;
+constexpr int MAX_QUIESCENCE_DEPTH = 10;
+constexpr int MAX_SEARCH_DEPTH = MAX_PV_SEARCH_DEPTH + MAX_QUIESCENCE_DEPTH;
+constexpr int DEFAULT_PERFT_DEPTH = 10;
+constexpr int DEFAULT_SEARCH_DEPTH = MAX_PV_SEARCH_DEPTH;
+constexpr int NULL_MOVE_REDUCTION_BASE = 2;
+constexpr int NULL_MOVE_REDUCTION_DEPTH_SCALE = 5;
+constexpr int NUM_KILLER_MOVES = 2;
+constexpr int TRANSPOSITION_TABLE_SIZE_MB = 1024;
 
 // time management
-const int CLOCK_UPDATE_INTERVAL_NODES = 10000;
-const Milliseconds DEFAULT_SEARCH_TIME = 5000;
-const Milliseconds FRACTION_OF_TIME_TO_ALLOCATE = 14;
-const Milliseconds SUFFICIENT_TIME_FOR_NEXT_ITERATION_FACTOR = 2; // 15;
+constexpr int CLOCK_UPDATE_INTERVAL_NODES = 10000;
+constexpr Milliseconds DEFAULT_SEARCH_TIME = 5000;
+constexpr Milliseconds FRACTION_OF_TIME_TO_ALLOCATE = 14;
+constexpr Milliseconds SUFFICIENT_TIME_FOR_NEXT_ITERATION_FACTOR = 2; // 15;
 
 // benchmark
-const int BENCHMARK_PERFT_DEPTH = 6;
-const int BENCHMARK_SEARCH_DEPTH = 11;
-const int BENCHMARK_EVALUATION_TIME_S = 1;
+constexpr int BENCHMARK_PERFT_DEPTH = 6;
+constexpr int BENCHMARK_SEARCH_DEPTH = 11;
+constexpr int BENCHMARK_EVALUATION_TIME_S = 1;
 
 // game state
 const std::string IN_PROGRESS = "In Progress";
@@ -140,7 +140,7 @@ enum PIECE_SYMBOLS
     WHITE_KING_SYMBOL = 'K',
     EMPTY_SYMBOL = ' '
 };
-const PieceSymbol PIECE_SYMBOLS[NUM_PIECES + 1] = {
+constexpr PieceSymbol PIECE_SYMBOLS[NUM_PIECES + 1] = {
     BLACK_PAWN_SYMBOL,
     WHITE_PAWN_SYMBOL,
     BLACK_KNIGHT_SYMBOL,

@@ -4,21 +4,21 @@
 #include "MoveGenerator.h"
 
 // material values
-const Score PAWN_VALUE = 100;
-const Score KNIGHT_VALUE = 300;
-const Score BISHOP_VALUE = 330;
-const Score ROOK_VALUE = 500;
-const Score QUEEN_VALUE = 900;
-const Score KING_VALUE = 500000;
-const Score DELTA_VALUE = 800;
-const Score ISOLATED_PAWN_VALUE = -50;
-const Score DOUBLED_PAWN_VALUE = -50;
-const Score BLOCKED_PAWN_VALUE = -50;
-const Score DRAW_VALUE = -200;
-const Score MATE_VALUE = 6000000;
-const Score MIN_MATE_VALUE = MATE_VALUE - MAX_SEARCH_DEPTH;
+constexpr Score PAWN_VALUE = 100;
+constexpr Score KNIGHT_VALUE = 300;
+constexpr Score BISHOP_VALUE = 330;
+constexpr Score ROOK_VALUE = 500;
+constexpr Score QUEEN_VALUE = 900;
+constexpr Score KING_VALUE = 500000;
+constexpr Score DELTA_VALUE = 800;
+constexpr Score ISOLATED_PAWN_VALUE = -50;
+constexpr Score DOUBLED_PAWN_VALUE = -50;
+constexpr Score BLOCKED_PAWN_VALUE = -50;
+constexpr Score DRAW_VALUE = -200;
+constexpr Score MATE_VALUE = 6000000;
+constexpr Score MIN_MATE_VALUE = MATE_VALUE - MAX_SEARCH_DEPTH;
 
-const Score PIECE_VALUES[NUM_PIECES] = {
+constexpr Score PIECE_VALUES[NUM_PIECES] = {
     PAWN_VALUE,
     PAWN_VALUE,
     KNIGHT_VALUE,
