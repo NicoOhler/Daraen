@@ -78,11 +78,6 @@ Board Board::generateBoardFromFEN(const std::string &fen)
     return board;
 }
 
-bool Board::isSquareOccupied(Position position) const
-{
-    return occupied & (1ULL << position);
-}
-
 void Board::printGameState(const Board &board)
 {
     Board::printBoard(board);

@@ -33,22 +33,7 @@ Move::Move(std::string move_string)
     }
 }
 
-bool Move::operator==(const Move &rhs) const
-{
-    return from == rhs.from && to == rhs.to && promotion == rhs.promotion;
-}
-
-bool Move::operator!=(const Move &rhs) const
-{
-    return from != rhs.from || to != rhs.to || promotion != rhs.promotion;
-}
-
-bool Move::isPromotion() const
-{
-    return promotion & (PROMOTE_TO_QUEEN | PROMOTE_TO_ROOK | PROMOTE_TO_BISHOP | PROMOTE_TO_KNIGHT);
-}
-
-bool Move::isQuiet(Board board) const
+bool Move::isQuiet(const Board &board) const
 {
     if (isPromotion())
         return false;
@@ -74,16 +59,6 @@ bool Move::isCastling(bool is_king) const
     return false;
 }
 
-Piece Move::getPromotionPiece(bool white_to_move)
-{
-    return promotion + (WHITE * white_to_move);
-}
-
-bool Move::isUndo() const
-{
-    return promotion == UNDO;
-}
-
 std::string Move::toString() const
 {
     std::string str = getSquareName(from) + getSquareName(to);
@@ -96,19 +71,4 @@ std::string Move::toString() const
     else if (promotion & PROMOTE_TO_KNIGHT)
         str += "N";
     return str;
-}
-
-void MoveList::append(Move move)
-{
-    moves[size++] = move;
-}
-
-void MoveList::clear()
-{
-    size = 0;
-}
-
-bool MoveList::empty()
-{
-    return size == 0;
 }

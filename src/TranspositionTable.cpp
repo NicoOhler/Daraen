@@ -50,16 +50,6 @@ void TranspositionTable::store(Hash hash, Score score, Move best_move, int remai
     entry.type = type;
 }
 
-BoundType TranspositionTable::getBoundType(Score score, Score lower_bound, Score upper_bound)
-{
-    BoundType type = EXACT;
-    if (score <= lower_bound)
-        type = UPPER_BOUND;
-    else if (score >= upper_bound)
-        type = LOWER_BOUND;
-    return type;
-}
-
 void TranspositionTable::clear()
 {
     hash_probe_hits = 0;
@@ -90,22 +80,4 @@ void TranspositionTable::printStatistics()
     log(TRANSPOSITION_TABLE, "\tHash Store Collisions: " + getFormattedInteger(hash_store_collisions) + ", Store Collision Rate: " + store_collision_rate);
     std::string probe_collision_rate = getFormattedPercentage(hash_probe_collisions, hash_probes);
     log(TRANSPOSITION_TABLE, "\tHash Probe Collisions: " + getFormattedInteger(hash_probe_collisions) + ", Probe Collision Rate: " + probe_collision_rate);
-}
-
-Score computeTranspositionScore(Score score, int ply)
-{
-    if (score >= MIN_MATE_VALUE)
-        score += ply;
-    else if (score <= -MIN_MATE_VALUE)
-        score -= ply;
-    return score;
-}
-
-Score computeOriginalScore(Score score, int ply)
-{
-    if (score >= MIN_MATE_VALUE)
-        score -= ply;
-    else if (score <= -MIN_MATE_VALUE)
-        score += ply;
-    return score;
 }

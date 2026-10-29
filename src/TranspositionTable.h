@@ -25,18 +25,42 @@ struct TranspositionEntry
     TranspositionEntry() = default;
 };
 
-Score computeTranspositionScore(Score score, int ply);
-Score computeOriginalScore(Score score, int ply);
-
 class TranspositionTable
 {
 public:
     TranspositionTable(int megabytes = TRANSPOSITION_TABLE_SIZE_MB);
-    TranspositionEntry *probe(Hash hash);
     void store(Hash hash, Score score, Move best_move, int remaining_depth, BoundType type);
-    BoundType getBoundType(Score score, Score lower_bound, Score upper_bound);
+    TranspositionEntry *probe(Hash hash);
     void clear();
     void printStatistics();
+
+    static Score computeTranspositionScore(Score score, int ply)
+    {
+        if (score >= MIN_MATE_VALUE)
+            score += ply;
+        else if (score <= -MIN_MATE_VALUE)
+            score -= ply;
+        return score;
+    }
+
+    static Score computeOriginalScore(Score score, int ply)
+    {
+        if (score >= MIN_MATE_VALUE)
+            score -= ply;
+        else if (score <= -MIN_MATE_VALUE)
+            score += ply;
+        return score;
+    }
+
+    static BoundType getBoundType(Score score, Score lower_bound, Score upper_bound)
+    {
+        BoundType type = EXACT;
+        if (score <= lower_bound)
+            type = UPPER_BOUND;
+        else if (score >= upper_bound)
+            type = LOWER_BOUND;
+        return type;
+    }
 
 private:
     uint64 table_size;

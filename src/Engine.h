@@ -35,7 +35,7 @@ public:
 private:
     Board board = Board::generateBoardFromFEN(START_FEN);
     MoveGenerator move_generator = MoveGenerator::getInstance();
-    TranspositionTable transposition_table;
+    TranspositionTable tt;
     ZobristHash zobrist;
     Evaluation eval;
     TimeManagement time_management;

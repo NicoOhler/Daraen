@@ -50,13 +50,49 @@ const Position WHITE_KING_ROOK_START_POSITION_NEW = 7;
 const Position BLACK_KING_ROOK_START_POSITION_NEW = 63;
 
 // Bitboard operations
-void movePiece(Bitboard &board, Position from, Position to);
-void set(Bitboard &board, Position position);
-void clear(Bitboard &board, Position position);
-void toggle(Bitboard &board, Position position);
-bool isSet(const Bitboard &board, Position position);
+inline void movePiece(Bitboard &board, Position from, Position to)
+{
+    board ^= (1ULL << from | 1ULL << to);
+}
+
+inline void set(Bitboard &board, Position position)
+{
+    board |= (1ULL << position);
+}
+
+inline void clear(Bitboard &board, Position position)
+{
+    board &= ~(1ULL << position);
+}
+
+inline void toggle(Bitboard &board, Position position)
+{
+    board ^= (1ULL << position);
+}
+
+inline bool isSet(const Bitboard &board, Position position)
+{
+    return (board & (1ULL << position)) != 0;
+}
+
+inline Position getRightmostSetBit(const Bitboard &board)
+{
+    return __builtin_ctzll(board);
+}
+
+inline int8 countSetBits(const Bitboard &board)
+{
+    return __builtin_popcountll(board);
+}
+
+// sets the rightmost set bit to 0 and returns its index
+inline Position clearRightmostSetBit(Bitboard &board)
+{
+    Position index_of_LSB = __builtin_ctzll(board);
+    board &= board - 1;
+    return index_of_LSB;
+}
+
 std::vector<bool> getBits(const Bitboard &board);
-int8 countSetBits(const Bitboard &board);
-Position clearRightmostSetBit(Bitboard &board); // sets the rightmost set bit to 0 and returns its index
-Position getRightmostSetBit(const Bitboard &board);
-void printBitboard(const Bitboard &board, const std::string &title = "");
+
+void printBitboard(const Bitboard &board, const std::string &title);

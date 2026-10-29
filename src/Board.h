@@ -42,7 +42,10 @@ struct Board // represents game state
     HalfMoveClock half_move_clock;
     Hash hash;
 
-    bool isSquareOccupied(Position position) const;
+    bool isSquareOccupied(Position position) const
+    {
+        return occupied & (1ULL << position);
+    }
 
     // static methods
     static Board generateBoardFromFEN(const std::string &fen);

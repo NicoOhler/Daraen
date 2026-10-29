@@ -29,7 +29,7 @@ void Engine::reset()
     stopSearch();
     time_management.reset();
     move_order.clear();
-    transposition_table.clear();
+    tt.clear();
 }
 
 void Engine::stopSearch(const std::string &reason)
@@ -57,12 +57,12 @@ Move Engine::search()
             break;
 
         // update best move and continue search
-        best_move = transposition_table.probe(board.hash)->best_move;
+        best_move = tt.probe(board.hash)->best_move;
         printSearchInfo(depth, score, best_move);
 
         if (!time_management.sufficientTimeForNextIterationLeft())
             stopSearch("Insufficient time for next iteration after " + convertMillisecondsToTimeString(time_management.getElapsedTime()));
-        transposition_table.printStatistics();
+        tt.printStatistics();
     }
     return best_move;
 }
@@ -74,14 +74,14 @@ Score Engine::pv_search(int ply, int remaining_depth, Score lower_bound, Score u
     Score original_upper_bound = upper_bound;
 
     // use results from transposition table if possible
-    TranspositionEntry *entry = transposition_table.probe(board.hash);
+    TranspositionEntry *entry = tt.probe(board.hash);
     if (entry != nullptr)
     {
         // reuse previously computed score if it was computed with sufficient depth
         if (entry->remaining_depth >= remaining_depth)
         {
             log(TRANSPOSITION_TABLE_MATCH, "Found position in transposition table");
-            Score retrieved_score = computeOriginalScore(entry->score, ply);
+            Score retrieved_score = tt.computeOriginalScore(entry->score, ply);
 
             // immediately return score if already computed
             if (entry->type == EXACT)
@@ -166,9 +166,9 @@ Score Engine::pv_search(int ply, int remaining_depth, Score lower_bound, Score u
             return -MATE_VALUE + ply;
 
     // store best move in transposition table
-    BoundType type = transposition_table.getBoundType(best_score, original_lower_bound, original_upper_bound);
-    Score transposition_score = computeTranspositionScore(best_score, ply);
-    transposition_table.store(board.hash, transposition_score, best_move, remaining_depth, type);
+    BoundType type = tt.getBoundType(best_score, original_lower_bound, original_upper_bound);
+    Score transposition_score = tt.computeTranspositionScore(best_score, ply);
+    tt.store(board.hash, transposition_score, best_move, remaining_depth, type);
     return best_score;
 }
 
@@ -197,7 +197,7 @@ Score Engine::quiescence(Score lower_bound, Score upper_bound, int ply)
     // further examine interesting moves (captures, promotions, checks, en passant)
     // todo efficiently generate evasion moves if king is in check
     MoveList pseudo_legal_moves = move_generator.generatePseudoLegalMoves(board, king_is_safe);
-    TranspositionEntry *entry = transposition_table.probe(board.hash);
+    TranspositionEntry *entry = tt.probe(board.hash);
     Move best_move = entry != nullptr ? entry->best_move : NULL_MOVE;
     move_order.calculateMoveScores(board, pseudo_legal_moves, best_move);
     for (int i = 0; i < pseudo_legal_moves.size && !search_stopped; i++)

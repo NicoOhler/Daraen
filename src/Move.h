@@ -14,19 +14,34 @@ struct Move
     Move(Move16 encoded_move);
     Move(std::string move_string);
 
-    bool isUndo() const;
+    bool isQuiet(const Board &board) const;
     bool isCastling(bool is_king_move) const;
-    bool isPromotion() const;
-    bool isQuiet(Board board) const;
-    Piece getPromotionPiece(bool white_to_move);
+    bool isUndo() const
+    {
+        return promotion == UNDO;
+    }
+    bool isPromotion() const
+    {
+        return promotion & (PROMOTE_TO_QUEEN | PROMOTE_TO_ROOK | PROMOTE_TO_BISHOP | PROMOTE_TO_KNIGHT);
+    }
+    Piece getPromotionPiece(bool white_to_move)
+    {
+        return promotion + (WHITE * white_to_move);
+    }
 
     std::string toString() const;
-    bool operator==(const Move &rhs) const;
-    bool operator!=(const Move &rhs) const;
+    bool operator==(const Move &rhs) const
+    {
+        return from == rhs.from && to == rhs.to && promotion == rhs.promotion;
+    }
+    bool operator!=(const Move &rhs) const
+    {
+        return from != rhs.from || to != rhs.to || promotion != rhs.promotion;
+    }
 };
 
-const Move UNDO_MOVE = Move{0, 0, UNDO};
-const Move NULL_MOVE = Move{0, 0, NO_PROMOTION};
+inline constexpr Move UNDO_MOVE = Move{0, 0, UNDO};
+inline constexpr Move NULL_MOVE = Move{0, 0, NO_PROMOTION};
 
 struct MoveList
 {
@@ -34,9 +49,20 @@ struct MoveList
     Score scores[MAX_MOVES];
     int size = 0;
 
-    void append(Move move);
-    void clear();
-    bool empty();
+    void append(Move move)
+    {
+        moves[size++] = move;
+    }
+
+    void clear()
+    {
+        size = 0;
+    }
+
+    bool empty()
+    {
+        return size == 0;
+    }
 };
 
 struct UndoInfo
