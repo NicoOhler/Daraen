@@ -82,14 +82,14 @@ void TranspositionTable::printStatistics()
 {
     log(TRANSPOSITION_TABLE, "Transposition Table Statistics:");
     uint64 hash_probes = hash_probe_hits + hash_probe_misses;
-    std::string hit_rate = getRoundedPercentageString(hash_probe_hits, hash_probes);
-    log(TRANSPOSITION_TABLE, "\tProbe Hits: " + std::to_string(hash_probe_hits) + ", Misses: " + std::to_string(hash_probe_misses) + ", Accesses: " + std::to_string(hash_probes) + ", Hit Rate: " + hit_rate);
-    std::string store_scuccess_rate = getRoundedPercentageString(hash_store_updates, hash_store_attempts);
-    log(TRANSPOSITION_TABLE, "\tStore Attempts: " + std::to_string(hash_store_attempts) + ", Updates: " + std::to_string(hash_store_updates) + ", Success Rate: " + store_scuccess_rate);
-    std::string store_collision_rate = getRoundedPercentageString(hash_store_collisions, hash_store_attempts);
-    log(TRANSPOSITION_TABLE, "\tHash Store Collisions: " + std::to_string(hash_store_collisions) + ", Store Collision Rate: " + store_collision_rate);
-    std::string probe_collision_rate = getRoundedPercentageString(hash_probe_collisions, hash_probes);
-    log(TRANSPOSITION_TABLE, "\tHash Probe Collisions: " + std::to_string(hash_probe_collisions) + ", Probe Collision Rate: " + probe_collision_rate);
+    std::string hit_rate = getFormattedPercentage(hash_probe_hits, hash_probes);
+    log(TRANSPOSITION_TABLE, "\tProbe Hits: " + getFormattedInteger(hash_probe_hits) + ", Misses: " + getFormattedInteger(hash_probe_misses) + ", Accesses: " + getFormattedInteger(hash_probes) + ", Hit Rate: " + hit_rate);
+    std::string store_scuccess_rate = getFormattedPercentage(hash_store_updates, hash_store_attempts);
+    log(TRANSPOSITION_TABLE, "\tStore Attempts: " + getFormattedInteger(hash_store_attempts) + ", Updates: " + getFormattedInteger(hash_store_updates) + ", Success Rate: " + store_scuccess_rate);
+    std::string store_collision_rate = getFormattedPercentage(hash_store_collisions, hash_store_attempts);
+    log(TRANSPOSITION_TABLE, "\tHash Store Collisions: " + getFormattedInteger(hash_store_collisions) + ", Store Collision Rate: " + store_collision_rate);
+    std::string probe_collision_rate = getFormattedPercentage(hash_probe_collisions, hash_probes);
+    log(TRANSPOSITION_TABLE, "\tHash Probe Collisions: " + getFormattedInteger(hash_probe_collisions) + ", Probe Collision Rate: " + probe_collision_rate);
 }
 
 Score computeTranspositionScore(Score score, int ply)

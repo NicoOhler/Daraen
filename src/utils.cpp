@@ -67,7 +67,7 @@ uint64 modPow2(uint64 n, uint64 m)
     return n & (m - 1); // fast modulo for power of 2
 }
 
-std::string getRoundedPercentageString(uint64 numerator, uint64 denominator, int precision)
+std::string getFormattedPercentage(uint64 numerator, uint64 denominator, int precision)
 {
     if (denominator == 0)
         return "0%";
@@ -75,6 +75,18 @@ std::string getRoundedPercentageString(uint64 numerator, uint64 denominator, int
     std::stringstream string_stream;
     string_stream << std::fixed << std::setprecision(2) << percentage << "%";
     return string_stream.str();
+}
+
+std::string getFormattedInteger(int value)
+{
+    std::string digits = std::to_string(value);
+    const bool is_negative = digits.front() == '-';
+    const std::size_t first_digit = is_negative ? 1 : 0;
+
+    for (std::size_t position = digits.size(); position > first_digit + 3; position -= 3)
+        digits.insert(position - 3, 1, ',');
+
+    return digits;
 }
 
 void print(const std::string &message, bool newline)

@@ -40,7 +40,7 @@ void UserInterface::startBenchmark()
     timer.start();
     uint64 nodes = engine.perft();
     timer.stop(BENCHMARK);
-    log(BENCHMARK, "Nodes searched: " + std::to_string(nodes));
+    log(BENCHMARK, "Nodes searched: " + getFormattedInteger(nodes));
 
     log(BENCHMARK, "Search for the best move with a depth of " + std::to_string(BENCHMARK_SEARCH_DEPTH) + ".");
     engine.setSearchDepth(BENCHMARK_SEARCH_DEPTH);
@@ -69,12 +69,12 @@ void UserInterface::startPerft()
     timer.start();
     uint64 nodes = engine.perft();
     timer.stop(PERFT);
-    log(PERFT, "Nodes searched: " + std::to_string(nodes));
+    log(PERFT, "Nodes searched: " + getFormattedInteger(nodes));
     if (expected_perft)
     {
         uint64 difference = nodes > expected_perft ? nodes - expected_perft : expected_perft - nodes;
         if (difference > 0)
-            log(PERFT, "Expected: " + std::to_string(expected_perft) + "\nDiff: " + std::to_string(difference));
+            log(PERFT, "Expected: " + getFormattedInteger(expected_perft) + "\nDiff: " + getFormattedInteger(difference));
     }
 }
 
@@ -320,7 +320,7 @@ void UserInterface::printHelp(const std::string &executable_name)
 void UserInterface::printGameState()
 {
     Score score = engine.evaluatePosition();
-    log(UI, "Board Evaluation: " + std::to_string(score));
+    log(UI, "Board Evaluation: " + getFormattedInteger(score));
     Board::printGameState(engine.getBoard());
 }
 
