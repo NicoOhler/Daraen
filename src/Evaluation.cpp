@@ -1,6 +1,5 @@
 #include "Evaluation.h"
 
-// todo replace with actual NNUE evaluation
 Score Evaluation::evaluate(Board board)
 {
     Score score = 0;
@@ -17,7 +16,6 @@ Score Evaluation::evaluate(Board board)
 
 Score Evaluation::evaluateKingSafety(Board board)
 {
-    // TODO: implement king safety evaluation
     return countSetBits(board.piece_bitboards[WHITE_KING]) * KING_VALUE - countSetBits(board.piece_bitboards[BLACK_KING]) * KING_VALUE;
 }
 

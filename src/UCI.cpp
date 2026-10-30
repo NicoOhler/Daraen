@@ -125,8 +125,6 @@ void UCI::handleGo(const std::string &command)
 {
     engine.stopSearch();
 
-    // todo go perft
-
     // provide a book move if available
     if (opening_book.enabled)
     {

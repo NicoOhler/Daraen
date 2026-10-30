@@ -48,13 +48,21 @@ Hash ZobristHash::computeInitialHash(Board &board)
 Hash ZobristHash::updateHash(Board &board, Move move, UndoInfo undo)
 {
     Hash &hash = board.hash;
-    Piece moving_piece = board.pieces[move.to]; // assume move has already been made => piece is at destination square
-    bool white_to_move = !board.white_to_move;
 
     // toggle whose turn it is
+    bool white_to_move = !board.white_to_move;
     hash ^= is_whites_turn;
 
+    if (move == NULL_MOVE)
+    {
+        // remove en passant rights if they existed
+        if (undo.en_passant != NO_EN_PASSANT)
+            hash ^= en_passant_file[modPow2(undo.en_passant, NUM_COLS)];
+        return hash;
+    }
+
     // remove piece from previous position
+    Piece moving_piece = board.pieces[move.to]; // assume move has already been made => piece is at destination square
     hash ^= piece_at_square[move.from][moving_piece];
 
     // remove previous en passant

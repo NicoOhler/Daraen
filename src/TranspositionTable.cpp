@@ -24,7 +24,6 @@ TranspositionEntry *TranspositionTable::probe(Hash hash)
     return &entry;
 }
 
-// todo bucket system instead of single entry per index, to reduce collisions
 // e.g. one slot for latest entry, one slot for deepest entry
 void TranspositionTable::store(Hash hash, Score score, Move best_move, int remaining_depth, BoundType type)
 {
@@ -37,7 +36,6 @@ void TranspositionTable::store(Hash hash, Score score, Move best_move, int remai
         hash_store_collisions++;
 
     // do not store if present entry has greater depth
-    // todo implement some aging since deep nodes from early in the game lose relevance later in the game
     if (entry.remaining_depth > remaining_depth)
         return;
 

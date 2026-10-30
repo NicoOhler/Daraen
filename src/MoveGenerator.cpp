@@ -625,7 +625,6 @@ UndoInfo MoveGenerator::makeMove(Board &board, Move move)
     // only switch sides for null moves
     if (move == NULL_MOVE)
     {
-        board.half_move_clock = HALF_MOVE_CLOCK_RESET;
         board.en_passant = NO_EN_PASSANT;
         board.white_to_move = !board.white_to_move;
         return undo;
